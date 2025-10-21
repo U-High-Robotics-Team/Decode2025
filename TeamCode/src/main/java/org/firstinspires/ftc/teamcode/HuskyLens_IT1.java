@@ -20,13 +20,19 @@ public class HuskyLensMetrics extends LinearOpMode { // Creating a class extensi
     
   huskyLens = hardwareMap.get(HuskyLens.class, "huskylens"); // Registering local name to the private object created earlier.
 
-    huskyLens.selectAlgorithm(HuskyLens.Algorithm.OBJECT_RECOGNITION // Selecting a fixed system of AI analysis.
+    huskyLens.selectAlgorithm(HuskyLens.Algorithm.OBJECT_RECOGNITION) // Selecting a fixed system of AI analysis.
 
     telemetry.update(); // Updating data-sector component of the command center (telemetry).
 
     waitForStart(); // If a designated command, the following will halt unless the "start" prompt is activated.
 
-  }
+    HuskyLens.Block[] blocks = huskylens.blocks(); // Array representation of all scanned objects by the camera is being initialized.
+
+    telemetry.addData("Samples Analyzed:", blocks.length); // Checking if the camera is actually scanning and referencing samples to objects.x1
+
+  } // Ending runOpMode() method in the algorithm.
+  
+} // Ending initial class of the entire program.
 
   
   
