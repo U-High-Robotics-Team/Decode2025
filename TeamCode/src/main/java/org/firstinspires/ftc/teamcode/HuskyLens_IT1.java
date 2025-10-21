@@ -12,6 +12,18 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 @Disabled // Negating teleop functionality.
 
 public class HuskyLensMetrics extends LinearOpMode { // Creating a class extension to generalized sequential system.
+
+  private HuskyLens huskyLens; // Creating a new reference object for latter usage (only within this program).
+
+  @Override // Priority granted to following algorithm.
+  public void runOpMode() { // Initialization and main-loop process.
+    
+  huskyLens = hardwareMap.get(HuskyLens.class, "huskylens"); // Registering local name to the private object created earlier.
+
+    waitForStart(); // If a designated command, the following will halt unless the "start" prompt is activated.
+    
+
+  
   
 
 
