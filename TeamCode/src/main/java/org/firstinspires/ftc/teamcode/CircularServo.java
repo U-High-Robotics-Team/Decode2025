@@ -26,5 +26,8 @@ public class RotationServo extends LinearOpMode { // Initializing a program that
     telemetry.addData("Status", "Initialized");
     telemetry.update(); 
 
+    while (opModeIsActive()){
+      if gamepad...?
+      
     
     
