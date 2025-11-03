@@ -27,7 +27,12 @@ public class RotationServo extends LinearOpMode { // Initializing a program that
     telemetry.update(); 
 
     while (opModeIsActive()){
-      if gamepad...?
+     //not fully developed\\ if gamepadA.isClicked() > 0.3){
+                                telemetry.update();
+                              else{
+                                return null;
+                              }
+        
       
     
     
