@@ -30,6 +30,7 @@ public class GlobalTeleOp extends OpMode {
     final double SHOOT_3 = 1; // not correct
 
     // Inital Conditions
+    int[] revolverStatus = new int[2];
     boolean readyToShoot = false;
     double wheelSpeed = WHEEL_SPEED_MAX;
     double revolverTarget = SHOOT_1;
@@ -50,7 +51,9 @@ public class GlobalTeleOp extends OpMode {
 
     enum RobotStates {
         HOME,
-        INTAKE,
+        INTAKE1,
+        INTAKE2,
+        INTAKE3,
         SHOOT
     }
 
@@ -66,6 +69,11 @@ public class GlobalTeleOp extends OpMode {
         revolver = hardwareMap.get(Servo.class, "revolver");
         intake = hardwareMap.get(DcMotor.class, "intake");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
+
+        // initialize the position for the revolver
+        for(int i = 0; i < revolverStatus.length; i++){
+            reolverStatus[i] = 0;
+        }
 
 
         // reverse the motor directions
@@ -150,7 +158,7 @@ public class GlobalTeleOp extends OpMode {
 
                 break;
 
-            case INTAKE:
+            case INTAKE1:
                 shooterSpeed = 0.0;
                 intakeSpeed = 1.0;
 
@@ -164,6 +172,32 @@ public class GlobalTeleOp extends OpMode {
 
                 break;
 
+            case INTAKE2:
+                shooterSpeed = 0.0;
+                intakeSpeed = 1.0;
+
+                if(gamepad2.a) {
+                    revolverTarget = INTAKE_1;
+                } else if(gamepad2.b) {
+                    revolverTarget = INTAKE_2;
+                } else if(gamepad2.y) {
+                    revolverTarget = INTAKE_3;
+                }
+                
+                break;
+
+            case INTAKE3:
+                shooterSpeed = 0.0;
+                intakeSpeed = 1.0;
+
+                if(gamepad2.a) {
+                    revolverTarget = INTAKE_1;
+                } else if(gamepad2.b) {
+                    revolverTarget = INTAKE_2;
+                } else if(gamepad2.y){
+                    revolverTarget = INTAKE_3;
+                }
+                
             case SHOOT:
                 shooterSpeed = 1.0;
                 intakeSpeed = 0.0;
@@ -191,6 +225,11 @@ public class GlobalTeleOp extends OpMode {
     public void moveShooter() {
         shooter.setPower(shooterSpeed);
     }
+
+    public void shootStore(int index){
+        revolverStatus[index] = 0;
+    }
+    
 
     @Override
     public void loop() {
