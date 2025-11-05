@@ -169,9 +169,9 @@ public class DecodeTeleOp extends OpMode {
                 shooterSpeed = 0.0;
 
                 if (requestedState == RobotStates.INTAKE1) {
-                    currentState = RobotStates.INTAKE1;
+                    currentState = nextStateForIntake();
                 } else if (requestedState == RobotStates.SHOOT1) {
-                    currentState = RobotStates.SHOOT1;
+                    currentState = nextStateForShoot();
                     timer.reset();
                 }
 
