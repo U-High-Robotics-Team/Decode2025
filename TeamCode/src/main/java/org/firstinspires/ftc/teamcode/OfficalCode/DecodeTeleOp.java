@@ -14,6 +14,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 
+import java.util.Arrays;
+
 
 // 1 = GPP
 // 2 = PGP
@@ -30,14 +32,18 @@ public class DecodeTeleOp extends OpMode {
 
     final double WHEEL_SPEED_MAX = 1;
 
+    NormalizedRGBA colors;
+
+    final double INTAKE_SPEED_MAX = -1;
+    final double SHOOTER_SPEED_MAX = -1;
 
     // Revolving Servo Positions
     final double INTAKE_1 = 0.0;
     final double INTAKE_2 = 0.45;
     final double INTAKE_3 = 0.9;
-    final double SHOOT_1 = 0.2;
-    final double SHOOT_2 = .65;
-    final double SHOOT_3 = 1; // TODO: adjust
+    final double SHOOT_1 = .65;
+    final double SHOOT_2 = 1;// TODO: adjust
+    final double SHOOT_3 = 0.2;
 
     // Lift Servo Positions
     final double UP_LIFT = 0.2; // TODO: adjust
@@ -88,6 +94,8 @@ public class DecodeTeleOp extends OpMode {
         shooter = hardwareMap.get(DcMotor.class, "shooter");
         lift = hardwareMap.get(Servo.class, "lift");
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
+
+        this.colors = colorSensor.getNormalizedColors();
 
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -179,21 +187,30 @@ public class DecodeTeleOp extends OpMode {
 
             case INTAKE1:
                 revolverTarget = INTAKE_1;
-                intakeSpeed = 1.0;
+                intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
-                intakeStorage[0] = colorSeen();
+                if(intakeStorage[0] == 0) {
+                    intakeStorage[0] = colorSeen();
+                    timer.reset();
+                }
 
-                if(colorSeen() != 0){
-                    requestedState = nextStateForIntake();
+                if(intakeStorage[0] != 0){
+
+                    if (timer.seconds() > 1){
+                        requestedState = nextStateForIntake();
+                    }
                 }
 
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE2) {
                     currentState = RobotStates.INTAKE2;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE3) {
                     currentState = RobotStates.INTAKE3;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT1) {
                     currentState = RobotStates.SHOOT1;
                     timer.reset();
@@ -209,22 +226,30 @@ public class DecodeTeleOp extends OpMode {
 
             case INTAKE2:
                 revolverTarget = INTAKE_2;
-                intakeSpeed = 1.0;
+                intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
-
-                intakeStorage[1] = colorSeen();
-
-                if(colorSeen() != 0){
-                    requestedState = nextStateForIntake();
+                if(intakeStorage[1] == 0) {
+                    timer.reset();
+                    intakeStorage[1] = colorSeen();
                 }
 
 
+                if(intakeStorage[1] != 0){
+
+                    if (timer.seconds() > 1){
+                        requestedState = nextStateForIntake();
+                    }
+                }
+
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE1) {
                     currentState = RobotStates.INTAKE1;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE3) {
                     currentState = RobotStates.INTAKE3;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT1) {
                     currentState = RobotStates.SHOOT1;
                     timer.reset();
@@ -239,21 +264,30 @@ public class DecodeTeleOp extends OpMode {
                 break;
             case INTAKE3:
                 revolverTarget = INTAKE_3;
-                intakeSpeed = 1.0;
+                intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
+                if(intakeStorage[2] == 0) {
+                    timer.reset();
+                    intakeStorage[2] = colorSeen();
+                }
 
-                intakeStorage[2] = colorSeen();
 
-                if(colorSeen() != 0){
-                    requestedState = nextStateForIntake();
+                if(intakeStorage[2] != 0){
+
+                    if (timer.seconds() > 1){
+                        requestedState = nextStateForIntake();
+                    }
                 }
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE2) {
                     currentState = RobotStates.INTAKE2;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE1) {
                     currentState = RobotStates.INTAKE1;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT1) {
                     currentState = RobotStates.SHOOT1;
                     timer.reset();
@@ -269,27 +303,33 @@ public class DecodeTeleOp extends OpMode {
             case SHOOT1:
                 revolverTarget = SHOOT_1;
                 intakeSpeed = 0.0;
-                shooterSpeed = 1.0;
-                intakeStorage[0] = 0;
+                shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > 0.6){
+                if(timer.seconds() > 1){
                     liftTarget = UP_LIFT;
+                    intakeStorage[0] = 0;
                 }
 
-                if(timer.seconds()>1.2){
+                if(timer.seconds()>2){
                     liftTarget = DOWN_LIFT;
                 }
 
-                requestedState = nextStateForShoot();
+                if(intakeStorage[0] == 0){
+                    requestedState = nextStateForShoot();
+                }
+
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE2) {
                     currentState = RobotStates.INTAKE2;
-                } else if (requestedState == RobotStates.INTAKE1) {
-                    currentState = RobotStates.INTAKE1;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE3) {
                     currentState = RobotStates.INTAKE3;
+                    timer.reset();
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
                     timer.reset();
                 } else if (requestedState == RobotStates.SHOOT2) {
                     currentState = RobotStates.SHOOT2;
@@ -303,30 +343,37 @@ public class DecodeTeleOp extends OpMode {
             case SHOOT2:
                 revolverTarget = SHOOT_2;
                 intakeSpeed = 0.0;
-                shooterSpeed = 1.0;
-                intakeStorage[1] = 0;
-
-                if(timer.seconds() > 0.6){
+                shooterSpeed = SHOOTER_SPEED_MAX;
+                if(timer.seconds() > 1){
                     liftTarget = UP_LIFT;
+                    intakeStorage[1] = 0;
                 }
 
-                if(timer.seconds()>1.2){
+                if(timer.seconds()>2){
                     liftTarget = DOWN_LIFT;
                 }
+
+                if(intakeStorage[1] == 0){
+                    requestedState = nextStateForShoot();
+                }
+
 
                 requestedState = nextStateForShoot();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE2) {
                     currentState = RobotStates.INTAKE2;
-                } else if (requestedState == RobotStates.INTAKE1) {
-                    currentState = RobotStates.INTAKE1;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE3) {
                     currentState = RobotStates.INTAKE3;
                     timer.reset();
                 } else if (requestedState == RobotStates.SHOOT1) {
                     currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
                     timer.reset();
                 } else if (requestedState == RobotStates.SHOOT3) {
                     currentState = RobotStates.SHOOT3;
@@ -338,33 +385,42 @@ public class DecodeTeleOp extends OpMode {
             case SHOOT3:
                 revolverTarget = SHOOT_3;
                 intakeSpeed = 0.0;
-                shooterSpeed = 1.0;
+                shooterSpeed = SHOOTER_SPEED_MAX;
                 intakeStorage[2] = 0;
 
-                if(timer.seconds() > 0.6){
+                if(timer.seconds() > 1){
                     liftTarget = UP_LIFT;
+                    intakeStorage[2] = 0;
                 }
 
-                if(timer.seconds()>1.2){
+                if(timer.seconds()>2){
                     liftTarget = DOWN_LIFT;
                 }
+
+                if(intakeStorage[2] == 0){
+                    requestedState = nextStateForShoot();
+                }
+
 
                 requestedState = nextStateForShoot();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE2) {
                     currentState = RobotStates.INTAKE2;
-                } else if (requestedState == RobotStates.INTAKE1) {
-                    currentState = RobotStates.INTAKE1;
+                    timer.reset();
                 } else if (requestedState == RobotStates.INTAKE3) {
                     currentState = RobotStates.INTAKE3;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT1) {
+                    currentState = RobotStates.SHOOT1;
                     timer.reset();
                 } else if (requestedState == RobotStates.SHOOT2) {
                     currentState = RobotStates.SHOOT2;
                     timer.reset();
-                } else if (requestedState == RobotStates.SHOOT1) {
-                    currentState = RobotStates.SHOOT1;
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
                     timer.reset();
                 }
 
@@ -421,7 +477,7 @@ public class DecodeTeleOp extends OpMode {
         }else if(availableIntake() == 2){
             return RobotStates.INTAKE3;
         }else{
-            return nextStateForShoot();
+            return RobotStates.HOME;
         }
     }
 
@@ -443,7 +499,7 @@ public class DecodeTeleOp extends OpMode {
         }else if(availableShoot() == 2){
             return RobotStates.SHOOT3;
         }else{
-            return nextStateForIntake();
+            return RobotStates.HOME;
         }
     }
 
@@ -458,7 +514,15 @@ public class DecodeTeleOp extends OpMode {
         stateMachine();
         odo.update();
 
-        telemetry.addData("Ready to Shoot", this.readyToShoot);
+        telemetry.addData("Current State", this.currentState);
+        telemetry.addData("Requested State", this.requestedState);
+
+        telemetry.addData("Ball Storage", Arrays.toString(this.intakeStorage));
+        telemetry.addData("Color Seen", this.colorSeen());
+        telemetry.addData("Color Red", this.colors.red);
+        telemetry.addData("Color Green", this.colors.green);
+        telemetry.addData("Color Blue", this.colors.blue);
+        telemetry.addData("Timer", this.timer);
         telemetry.update();
     }
 }
