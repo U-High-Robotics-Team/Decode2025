@@ -1,8 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 // import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -12,13 +15,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+
+// 1 = GPP
+// 2 = PGP
+// 3 = PPG
+
+// 0 = empty
+// 1 = purple
+// 2 = green
+
 @TeleOp(name="GlobalTeleOp")
 public class TeleOpProperStates extends OpMode {
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
 
     final double WHEEL_SPEED_MAX = 1;
-    final double WHEEL_SPEED_LIMITED = 0.17;
 
 
     // Revolving Servo Positions
@@ -27,7 +38,11 @@ public class TeleOpProperStates extends OpMode {
     final double INTAKE_3 = 0.9;
     final double SHOOT_1 = 0.2;
     final double SHOOT_2 = .65;
-    final double SHOOT_3 = 1; // not correct
+    final double SHOOT_3 = 1; // TODO: adjust
+
+    // Lift Servo Positions
+    final double UP_LIFT = 0.2; // TODO: adjust
+    final double DOWN_LIFT = 0.0; // TODO: adjust
 
     // Inital Conditions
     boolean readyToShoot = false;
@@ -35,10 +50,10 @@ public class TeleOpProperStates extends OpMode {
     double revolverTarget = SHOOT_1;
     double intakeSpeed = 0.0;
     double shooterSpeed = 0.0;
+    double liftTarget = DOWN_LIFT;
     RobotStates currentState = RobotStates.HOME;
     RobotStates requestedState = RobotStates.HOME;
-
-
+    int[] intakeStorage = new int[3];
 
     GoBildaPinpointDriver odo;
     private DcMotor BLeft;
@@ -48,6 +63,8 @@ public class TeleOpProperStates extends OpMode {
     private DcMotor intake;
     private DcMotor shooter;
     private Servo revolver;
+    private Servo lift;
+    private NormalizedColorSensor colorSensor;
 
     enum RobotStates {
         HOME,
@@ -58,7 +75,6 @@ public class TeleOpProperStates extends OpMode {
         SHOOT2,
         SHOOT3
     }
-
 
     @Override
     public void init() {
@@ -71,7 +87,8 @@ public class TeleOpProperStates extends OpMode {
         revolver = hardwareMap.get(Servo.class, "revolver");
         intake = hardwareMap.get(DcMotor.class, "intake");
         shooter = hardwareMap.get(DcMotor.class, "shooter");
-
+        lift = hardwareMap.get(Servo.class, "lift");
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
 
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -83,9 +100,8 @@ public class TeleOpProperStates extends OpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
         odo.resetPosAndIMU();
 
-        Pose2D startingPosition= new Pose2D(DistanceUnit.MM,-923.925, 1601.47, AngleUnit.RADIANS, 0);
+        Pose2D startingPosition = new Pose2D(DistanceUnit.MM, -923.925, 1601.47, AngleUnit.RADIANS, 0);
         odo.setPosition(startingPosition);
-
 
         telemetry.addData("Status", "Initialized");
         telemetry.addData("Device Version Number:", odo.getDeviceVersion());
@@ -97,20 +113,20 @@ public class TeleOpProperStates extends OpMode {
     }
 
 
-    public void moveRobot(){
+    public void moveRobot() {
         double forward = -gamepad1.left_stick_y * wheelSpeed; // (inverted Y-axis)
         double strafe = gamepad1.left_stick_x * wheelSpeed;
         double rotate = gamepad1.right_stick_x * wheelSpeed;
 
-        if (gamepad1.right_trigger > 0.9){
+        if (gamepad1.right_trigger > 0.9) {
             odo.resetPosAndIMU(); //resets the position to 0 and recalibrates the IMU
         }
 
         Pose2D pos = odo.getPosition();
-        double heading =  pos.getHeading(AngleUnit.RADIANS);
+        double heading = pos.getHeading(AngleUnit.RADIANS);
 
-        double cosAngle = Math.cos((Math.PI / 2)-heading);
-        double sinAngle = Math.sin((Math.PI / 2)-heading);
+        double cosAngle = Math.cos((Math.PI / 2) - heading);
+        double sinAngle = Math.sin((Math.PI / 2) - heading);
 
         double globalForward = forward * cosAngle + strafe * sinAngle;
         double globalStrafe = -forward * sinAngle + strafe * cosAngle;
@@ -136,22 +152,29 @@ public class TeleOpProperStates extends OpMode {
         telemetry.addData("Strafe Speed : ", globalStrafe);
     }
 
-    public void gamepadInputs(){
+    public void gamepadInputs() {
         // Switch Between Robot Modes: Shooting and Intaking
-        if(gamepad2.a && !readyToShoot){
+        if (gamepad2.right_trigger > 0.5) {
+            readyToShoot = true;
+        } else if (gamepad2.left_trigger > 0.5) {
+            readyToShoot = false;
+        } else if (gamepad2.start) {
+            requestedState = RobotStates.HOME;
+        }
+
+        if (gamepad2.a && !readyToShoot) {
             requestedState = RobotStates.INTAKE1;
-        }else if(gamepad2.b && !readyToShoot){
+        } else if (gamepad2.b && !readyToShoot) {
             requestedState = RobotStates.INTAKE2;
-        }else if(gamepad2.y && !readyToShoot){
+        } else if (gamepad2.y && !readyToShoot) {
             requestedState = RobotStates.INTAKE3;
         }
 
-        if(gamepad2.a && readyToShoot){
-
+        if (gamepad2.a && readyToShoot) {
             requestedState = RobotStates.SHOOT1;
-        }else if(gamepad2.b && readyToShoot){
+        } else if (gamepad2.b && readyToShoot) {
             requestedState = RobotStates.SHOOT2;
-        }else if(gamepad2.y && readyToShoot){
+        } else if (gamepad2.y && readyToShoot) {
             requestedState = RobotStates.SHOOT3;
         }
     }
@@ -182,8 +205,9 @@ public class TeleOpProperStates extends OpMode {
                 revolverTarget = INTAKE_1;
                 intakeSpeed = 1.0;
 
-                if (requestedState == RobotStates.INTAKE1) {
-                    currentState = RobotStates.INTAKE1;
+
+                if (requestedState == RobotStates.HOME) {
+                    currentState = RobotStates.HOME;
                 } else if (requestedState == RobotStates.INTAKE2) {
                     currentState = RobotStates.INTAKE2;
                 } else if (requestedState == RobotStates.INTAKE3) {
@@ -200,12 +224,35 @@ public class TeleOpProperStates extends OpMode {
         }
     }
 
-    public void moveRevolver(){
+    public void moveRevolver() {
         revolver.setPosition(revolverTarget);
     }
 
-    public void moveIntake(){
+    public void moveIntake() {
         intake.setPower(intakeSpeed);
+    }
+
+    public void moveShooter(){
+        shooter.setPower(shooterSpeed);
+    }
+
+    public void moveLift() {
+        lift.setPosition(liftTarget);
+    }
+
+    public int colorSeen(){
+        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+
+        if(colors.red < 0.01 & colors.green < 0.01 & colors.blue < 0.01){
+            return 0;
+        } else if(colors.green<colors.blue){
+            return 1;
+        } else if(colors.green>colors.blue){
+            return 2;
+        }
+
+        // if this hits then the code has an error
+        return -1;
     }
 
     @Override
@@ -219,23 +266,4 @@ public class TeleOpProperStates extends OpMode {
         telemetry.addData("Ready to Shoot", this.readyToShoot);
         telemetry.update();
     }
-
-
-//        if(this.readyToShoot){
-//        if(gamepad2.y){
-//            revolverTarget = SHOOT_3;
-//        }else if(gamepad2.b){
-//            revolverTarget = SHOOT_2;
-//        }else if(gamepad2.a){
-//            revolverTarget = SHOOT_1;
-//        }
-//    }else{
-//        if(gamepad2.y){
-//            revolverTarget = INTAKE_3;
-//        }else if(gamepad2.b){
-//            revolverTarget = INTAKE_2;
-//        }else if(gamepad2.a){
-//            revolverTarget = INTAKE_1;
-//        }
-//    }
 }
