@@ -11,8 +11,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
-@TeleOp(name="Global TeleOp Testing")
-public class GlobalTeleOpTest extends OpMode {
+@TeleOp(name="GlobalTeleOpTestWithIntake")
+public class GlobalTeleOpTestWithIntake extends OpMode {
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
 
@@ -96,7 +96,7 @@ public class GlobalTeleOpTest extends OpMode {
               dpadUpStartTime = 0;
           }
         intake.setPower(0);
-        telemetry.update()
+        telemetry.update();
     }
 
     @Override

@@ -9,8 +9,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
-@TeleOp(name="Global TeleOp Testing")
-public class GlobalTeleOpTest extends OpMode {
+@TeleOp(name="KinematicsLaunch")
+public class KinematicsLaunch extends OpMode {
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
     final double WHEEL_SPEED_MAX = 1;
@@ -29,7 +29,7 @@ public class GlobalTeleOpTest extends OpMode {
         double theta = (double) Math.random(); // We don't know yet.... Fill in later.
         double yInitial = 0; // Fill in later from height of projector.
         final double initialVelocity = 10; // Inches/Second
-        double tMax = (int) calculateHeight(xInitial, theta, yInitial, initialVelocity);
+//        double tMax = (int) calculateHeight(xInitial, theta, yInitial, initialVelocity);
         double xProjected;
         double yProjected = 44;
       
@@ -41,13 +41,13 @@ public class GlobalTeleOpTest extends OpMode {
 
 
     }
-
-
-    public double calculateHeight(double offset, double theta, double yInitial, double iVelocity){
-        double tMaxHeight = yInitial + (iVelocity 
-        
-        
-    }
+//
+//
+//    public double calculateHeight(double offset, double theta, double yInitial, double iVelocity){
+//        double tMaxHeight = yInitial + (iVelocity
+//
+//
+//    }
 
     public void moveRobot(){
         double forward = -gamepad1.left_stick_y * wheelSpeed; // (inverted Y-axis)
