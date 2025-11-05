@@ -181,6 +181,7 @@ public class DecodeTeleOp extends OpMode {
                 revolverTarget = INTAKE_1;
                 intakeSpeed = 1.0;
                 shooterSpeed = 0.0;
+                intakeStorage[0] = colorSeen();
 
                 if(colorSeen() != 0){
                     requestedState = nextStateForIntake();
@@ -211,6 +212,8 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = 1.0;
                 shooterSpeed = 0.0;
 
+                intakeStorage[1] = colorSeen();
+
                 if(colorSeen() != 0){
                     requestedState = nextStateForIntake();
                 }
@@ -239,6 +242,8 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = 1.0;
                 shooterSpeed = 0.0;
 
+                intakeStorage[2] = colorSeen();
+
                 if(colorSeen() != 0){
                     requestedState = nextStateForIntake();
                 }
@@ -265,6 +270,7 @@ public class DecodeTeleOp extends OpMode {
                 revolverTarget = SHOOT_1;
                 intakeSpeed = 0.0;
                 shooterSpeed = 1.0;
+                intakeStorage[0] = 0;
 
                 if(timer.seconds() > 0.6){
                     liftTarget = UP_LIFT;
@@ -298,6 +304,7 @@ public class DecodeTeleOp extends OpMode {
                 revolverTarget = SHOOT_2;
                 intakeSpeed = 0.0;
                 shooterSpeed = 1.0;
+                intakeStorage[1] = 0;
 
                 if(timer.seconds() > 0.6){
                     liftTarget = UP_LIFT;
@@ -332,6 +339,7 @@ public class DecodeTeleOp extends OpMode {
                 revolverTarget = SHOOT_3;
                 intakeSpeed = 0.0;
                 shooterSpeed = 1.0;
+                intakeStorage[2] = 0;
 
                 if(timer.seconds() > 0.6){
                     liftTarget = UP_LIFT;
@@ -447,6 +455,7 @@ public class DecodeTeleOp extends OpMode {
         moveIntake();
         moveShooter();
         moveLift();
+        stateMachine();
         odo.update();
 
         telemetry.addData("Ready to Shoot", this.readyToShoot);
