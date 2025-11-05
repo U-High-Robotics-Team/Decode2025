@@ -1,12 +1,10 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OfficalCode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 // import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -14,6 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 
 
 // 1 = GPP
@@ -24,8 +23,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 // 1 = purple
 // 2 = green
 
-@TeleOp(name="GlobalTeleOp")
-public class TeleOpProperStates extends OpMode {
+@TeleOp(name="DecodeTeleOp")
+public class DecodeTeleOp extends OpMode {
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
 
@@ -66,7 +65,7 @@ public class TeleOpProperStates extends OpMode {
     private Servo lift;
     private NormalizedColorSensor colorSensor;
 
-    enum RobotStates {
+    public enum RobotStates {
         HOME,
         INTAKE1,
         INTAKE2,
@@ -155,27 +154,11 @@ public class TeleOpProperStates extends OpMode {
     public void gamepadInputs() {
         // Switch Between Robot Modes: Shooting and Intaking
         if (gamepad2.right_trigger > 0.5) {
-            readyToShoot = true;
+            requestedState = RobotStates.INTAKE1;
         } else if (gamepad2.left_trigger > 0.5) {
-            readyToShoot = false;
+            requestedState = RobotStates.SHOOT1;
         } else if (gamepad2.start) {
             requestedState = RobotStates.HOME;
-        }
-
-        if (gamepad2.a && !readyToShoot) {
-            requestedState = RobotStates.INTAKE1;
-        } else if (gamepad2.b && !readyToShoot) {
-            requestedState = RobotStates.INTAKE2;
-        } else if (gamepad2.y && !readyToShoot) {
-            requestedState = RobotStates.INTAKE3;
-        }
-
-        if (gamepad2.a && readyToShoot) {
-            requestedState = RobotStates.SHOOT1;
-        } else if (gamepad2.b && readyToShoot) {
-            requestedState = RobotStates.SHOOT2;
-        } else if (gamepad2.y && readyToShoot) {
-            requestedState = RobotStates.SHOOT3;
         }
     }
 
@@ -187,16 +170,9 @@ public class TeleOpProperStates extends OpMode {
 
                 if (requestedState == RobotStates.INTAKE1) {
                     currentState = RobotStates.INTAKE1;
-                } else if (requestedState == RobotStates.INTAKE2) {
-                    currentState = RobotStates.INTAKE2;
-                } else if (requestedState == RobotStates.INTAKE3) {
-                    currentState = RobotStates.INTAKE3;
                 } else if (requestedState == RobotStates.SHOOT1) {
                     currentState = RobotStates.SHOOT1;
-                } else if (requestedState == RobotStates.SHOOT2) {
-                    currentState = RobotStates.SHOOT2;
-                } else if (requestedState == RobotStates.SHOOT3) {
-                    currentState = RobotStates.SHOOT3;
+                    timer.reset();
                 }
 
                 break;
@@ -204,6 +180,11 @@ public class TeleOpProperStates extends OpMode {
             case INTAKE1:
                 revolverTarget = INTAKE_1;
                 intakeSpeed = 1.0;
+                shooterSpeed = 0.0;
+
+                if(colorSeen() != 0){
+                    requestedState = nextStateForIntake();
+                }
 
 
                 if (requestedState == RobotStates.HOME) {
@@ -214,13 +195,172 @@ public class TeleOpProperStates extends OpMode {
                     currentState = RobotStates.INTAKE3;
                 } else if (requestedState == RobotStates.SHOOT1) {
                     currentState = RobotStates.SHOOT1;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT2) {
                     currentState = RobotStates.SHOOT2;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT3) {
                     currentState = RobotStates.SHOOT3;
+                    timer.reset();
+                }
+
+                break;
+
+            case INTAKE2:
+                revolverTarget = INTAKE_2;
+                intakeSpeed = 1.0;
+                shooterSpeed = 0.0;
+
+                if(colorSeen() != 0){
+                    requestedState = nextStateForIntake();
                 }
 
 
+                if (requestedState == RobotStates.HOME) {
+                    currentState = RobotStates.HOME;
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
+                } else if (requestedState == RobotStates.INTAKE3) {
+                    currentState = RobotStates.INTAKE3;
+                } else if (requestedState == RobotStates.SHOOT1) {
+                    currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT2) {
+                    currentState = RobotStates.SHOOT2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT3) {
+                    currentState = RobotStates.SHOOT3;
+                    timer.reset();
+                }
+
+                break;
+            case INTAKE3:
+                revolverTarget = INTAKE_3;
+                intakeSpeed = 1.0;
+                shooterSpeed = 0.0;
+
+                if(colorSeen() != 0){
+                    requestedState = nextStateForIntake();
+                }
+
+                if (requestedState == RobotStates.HOME) {
+                    currentState = RobotStates.HOME;
+                } else if (requestedState == RobotStates.INTAKE2) {
+                    currentState = RobotStates.INTAKE2;
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
+                } else if (requestedState == RobotStates.SHOOT1) {
+                    currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT2) {
+                    currentState = RobotStates.SHOOT2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT3) {
+                    currentState = RobotStates.SHOOT3;
+                    timer.reset();
+                }
+
+                break;
+            case SHOOT1:
+                revolverTarget = SHOOT_1;
+                intakeSpeed = 0.0;
+                shooterSpeed = 1.0;
+
+                if(timer.seconds() > 0.6){
+                    liftTarget = UP_LIFT;
+                }
+
+                if(timer.seconds()>1.2){
+                    liftTarget = DOWN_LIFT;
+                }
+
+                requestedState = nextStateForShoot();
+
+                if (requestedState == RobotStates.HOME) {
+                    currentState = RobotStates.HOME;
+                } else if (requestedState == RobotStates.INTAKE2) {
+                    currentState = RobotStates.INTAKE2;
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
+                } else if (requestedState == RobotStates.INTAKE3) {
+                    currentState = RobotStates.INTAKE3;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT2) {
+                    currentState = RobotStates.SHOOT2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT3) {
+                    currentState = RobotStates.SHOOT3;
+                    timer.reset();
+                }
+
+                break;
+            case SHOOT2:
+                revolverTarget = SHOOT_2;
+                intakeSpeed = 0.0;
+                shooterSpeed = 1.0;
+
+                if(timer.seconds() > 0.6){
+                    liftTarget = UP_LIFT;
+                }
+
+                if(timer.seconds()>1.2){
+                    liftTarget = DOWN_LIFT;
+                }
+
+                requestedState = nextStateForShoot();
+
+                if (requestedState == RobotStates.HOME) {
+                    currentState = RobotStates.HOME;
+                } else if (requestedState == RobotStates.INTAKE2) {
+                    currentState = RobotStates.INTAKE2;
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
+                } else if (requestedState == RobotStates.INTAKE3) {
+                    currentState = RobotStates.INTAKE3;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT1) {
+                    currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT3) {
+                    currentState = RobotStates.SHOOT3;
+                    timer.reset();
+                }
+
+                break;
+
+            case SHOOT3:
+                revolverTarget = SHOOT_3;
+                intakeSpeed = 0.0;
+                shooterSpeed = 1.0;
+
+                if(timer.seconds() > 0.6){
+                    liftTarget = UP_LIFT;
+                }
+
+                if(timer.seconds()>1.2){
+                    liftTarget = DOWN_LIFT;
+                }
+
+                requestedState = nextStateForShoot();
+
+                if (requestedState == RobotStates.HOME) {
+                    currentState = RobotStates.HOME;
+                } else if (requestedState == RobotStates.INTAKE2) {
+                    currentState = RobotStates.INTAKE2;
+                } else if (requestedState == RobotStates.INTAKE1) {
+                    currentState = RobotStates.INTAKE1;
+                } else if (requestedState == RobotStates.INTAKE3) {
+                    currentState = RobotStates.INTAKE3;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT2) {
+                    currentState = RobotStates.SHOOT2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT1) {
+                    currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                }
+
+                break;
         }
     }
 
@@ -255,12 +395,58 @@ public class TeleOpProperStates extends OpMode {
         return -1;
     }
 
+    public int availableIntake(){
+        for (int i = 0; i < intakeStorage.length; i++) {
+            if(this.intakeStorage[i] == 0){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public RobotStates nextStateForIntake(){
+        if(availableIntake() == 0){
+            return RobotStates.INTAKE1;
+        }else if(availableIntake() == 1){
+            return RobotStates.INTAKE2;
+        }else if(availableIntake() == 2){
+            return RobotStates.INTAKE3;
+        }else{
+            return nextStateForShoot();
+        }
+    }
+
+    public int availableShoot(){
+        for (int i = 0; i < intakeStorage.length; i++) {
+            if(this.intakeStorage[i] != 0){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    public RobotStates nextStateForShoot(){
+        if(availableShoot() == 0){
+            return RobotStates.SHOOT1;
+        }else if(availableShoot() == 1){
+            return RobotStates.SHOOT2;
+        }else if(availableShoot() == 2){
+            return RobotStates.SHOOT3;
+        }else{
+            return nextStateForIntake();
+        }
+    }
+
     @Override
     public void loop() {
         gamepadInputs();
         moveRobot();
         moveRevolver();
         moveIntake();
+        moveShooter();
+        moveLift();
         odo.update();
 
         telemetry.addData("Ready to Shoot", this.readyToShoot);
