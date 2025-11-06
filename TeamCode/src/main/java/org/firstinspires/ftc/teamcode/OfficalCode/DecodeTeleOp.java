@@ -3,7 +3,8 @@ package org.firstinspires.ftc.teamcode.OfficalCode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-// import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -38,12 +39,12 @@ public class DecodeTeleOp extends OpMode {
     final double SHOOTER_SPEED_MAX = -1;
 
     // Revolving Servo Positions
-    final double INTAKE_1 = 0.0;
-    final double INTAKE_2 = 0.45;
-    final double INTAKE_3 = 0.9;
-    final double SHOOT_1 = .68;
-    final double SHOOT_2 = 1;// TODO: adjust
-    final double SHOOT_3 = 0.23;
+    final double INTAKE_1 = 0.207;
+    final double INTAKE_2 = 0.27;
+    final double INTAKE_3 = 0.337;
+    final double SHOOT_1 = 0.305;
+    final double SHOOT_2 = 0.37;
+    final double SHOOT_3 = 0.447;
 
     // Lift Servo Positions
     private final double UP_LIFT = 0.89;
@@ -66,7 +67,7 @@ public class DecodeTeleOp extends OpMode {
     private DcMotor FLeft;
     private DcMotor FRight;
     private DcMotor intake;
-    private DcMotor shooter;
+    private DcMotorEx shooter;
     private Servo revolver;
     private Servo lift;
     private NormalizedColorSensor colorSensor;
@@ -91,15 +92,20 @@ public class DecodeTeleOp extends OpMode {
         FRight = hardwareMap.get(DcMotor.class, "frontright");
         revolver = hardwareMap.get(Servo.class, "revolver");
         intake = hardwareMap.get(DcMotor.class, "intake");
-        shooter = hardwareMap.get(DcMotor.class, "shooter");
         lift = hardwareMap.get(Servo.class, "lift");
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "colorSensor");
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+        shooter.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooter.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(10, 3, 0, 12)); // tune as needed
+
 
         this.colors = colorSensor.getNormalizedColors();
 
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         FLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // odometry configuration
         odo.setOffsets(-84.0, -168.0); //these are tuned for 3110-0002-0001 Product Insight #1
@@ -162,9 +168,9 @@ public class DecodeTeleOp extends OpMode {
     public void gamepadInputs() {
         // Switch Between Robot Modes: Shooting and Intaking
         if (gamepad1.right_trigger > 0.5) {
-            requestedState = RobotStates.INTAKE1;
+            requestedState = nextStateForIntake();
         } else if (gamepad1.left_trigger > 0.5) {
-            requestedState = RobotStates.SHOOT1;
+            requestedState = nextStateForShoot();
         } else if (gamepad1.start) {
             requestedState = RobotStates.HOME;
         }
@@ -177,9 +183,22 @@ public class DecodeTeleOp extends OpMode {
                 shooterSpeed = 0.0;
 
                 if (requestedState == RobotStates.INTAKE1) {
-                    currentState = nextStateForIntake();
+                    currentState = RobotStates.INTAKE1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.INTAKE2) {
+                    currentState = RobotStates.INTAKE2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.INTAKE3) {
+                    currentState = RobotStates.INTAKE3;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT1) {
-                    currentState = nextStateForShoot();
+                    currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT2) {
+                    currentState = RobotStates.SHOOT2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT3) {
+                    currentState = RobotStates.SHOOT3;
                     timer.reset();
                 }
 
@@ -189,11 +208,9 @@ public class DecodeTeleOp extends OpMode {
                 revolverTarget = INTAKE_1;
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
-                if(timer.seconds()>2){
-                    if(intakeStorage[0] == 0) {
-                        intakeStorage[0] = colorSeen();
-                        timer.reset();
-                    }
+
+                if(timer.seconds()>2 && intakeStorage[0] == 0){
+                    intakeStorage[0] = colorSeen();
 
                     if(intakeStorage[0] != 0){
                         requestedState = nextStateForIntake();
@@ -227,16 +244,14 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
 
-                if(timer.seconds()>2){
-                    if(intakeStorage[1] == 0) {
-                        intakeStorage[1] = colorSeen();
-                        timer.reset();
-                    }
+                if(timer.seconds()>2 && intakeStorage[1] == 0){
+                    intakeStorage[1] = colorSeen();
 
                     if(intakeStorage[1] != 0){
                         requestedState = nextStateForIntake();
                     }
                 }
+
 
 
                 if (requestedState == RobotStates.HOME) {
@@ -265,11 +280,8 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
 
-                if(timer.seconds()>2){
-                    if(intakeStorage[2] == 0) {
-                        intakeStorage[2] = colorSeen();
-                        timer.reset();
-                    }
+                if(timer.seconds()>2 && intakeStorage[2] == 0){
+                    intakeStorage[2] = colorSeen();
 
                     if(intakeStorage[2] != 0){
                         requestedState = nextStateForIntake();
@@ -302,16 +314,16 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > 2){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[0] = 0;
                 }
 
-                if(timer.seconds()>4){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT){
+                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
                     requestedState = nextStateForShoot();
                 }
 
@@ -341,21 +353,20 @@ public class DecodeTeleOp extends OpMode {
                 revolverTarget = SHOOT_2;
                 intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
-                if(timer.seconds() > 2){
+
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[1] = 0;
                 }
 
-                if(timer.seconds()>4){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT){
+                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
                     requestedState = nextStateForShoot();
                 }
 
-
-                requestedState = nextStateForShoot();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -385,21 +396,19 @@ public class DecodeTeleOp extends OpMode {
                 shooterSpeed = SHOOTER_SPEED_MAX;
                 intakeStorage[2] = 0;
 
-                if(timer.seconds() > 2){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[2] = 0;
                 }
 
-                if(timer.seconds()>4){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT){
+                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
                     requestedState = nextStateForShoot();
                 }
 
-
-                requestedState = nextStateForShoot();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -433,16 +442,29 @@ public class DecodeTeleOp extends OpMode {
         intake.setPower(intakeSpeed);
     }
 
-    public void moveShooter(){
-        shooter.setPower(shooterSpeed);
+    public void moveShooter() {
+        double targetRPM = 1500;
+
+        double ticksPerRev = 537.7; // GoBilda motor encoder CPR
+        double targetVelocity = targetRPM * ticksPerRev / 60.0;
+
+        if(shooterSpeed == SHOOTER_SPEED_MAX) {
+            shooter.setVelocity(targetVelocity);
+        }else{
+            shooter.setVelocity(0);
+        }
+        telemetry.addData("Shooter RPM Target", targetRPM);
+        telemetry.addData("Shooter Velocity (t/s)", shooter.getVelocity());
+        telemetry.addData("Shooter RPM Actual", shooter.getVelocity() * 60 / ticksPerRev);
     }
+
 
     public void moveLift() {
         lift.setPosition(liftTarget);
     }
 
     public int colorSeen(){
-        NormalizedRGBA colors = colorSensor.getNormalizedColors();
+        this.colors = colorSensor.getNormalizedColors();
 
         if(colors.red < 0.01 & colors.green < 0.01 & colors.blue < 0.01){
             return 0;
@@ -502,24 +524,27 @@ public class DecodeTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        odo.update();
+        this.colors = colorSensor.getNormalizedColors();
+
         gamepadInputs();
-        moveRobot();
+        stateMachine();
+
         moveRevolver();
         moveIntake();
         moveShooter();
         moveLift();
-        stateMachine();
-        odo.update();
+        moveRobot();
 
-        telemetry.addData("Current State", this.currentState);
-        telemetry.addData("Requested State", this.requestedState);
-
-        telemetry.addData("Ball Storage", Arrays.toString(this.intakeStorage));
-        telemetry.addData("Color Seen", this.colorSeen());
-        telemetry.addData("Color Red", this.colors.red);
-        telemetry.addData("Color Green", this.colors.green);
-        telemetry.addData("Color Blue", this.colors.blue);
-        telemetry.addData("Timer", this.timer);
+        telemetry.addData("Current State", currentState);
+        telemetry.addData("Requested State", requestedState);
+        telemetry.addData("Ball Storage", Arrays.toString(intakeStorage));
+        telemetry.addData("Color Seen", colorSeen());
+        telemetry.addData("Timer (s)", timer.seconds());
+        telemetry.addData("Red", colors.red);
+        telemetry.addData("Blue", colors.blue);
+        telemetry.addData("Green", colors.green);
         telemetry.update();
     }
+
 }
