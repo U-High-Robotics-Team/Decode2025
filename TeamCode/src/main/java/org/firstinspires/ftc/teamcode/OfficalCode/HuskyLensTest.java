@@ -12,9 +12,9 @@ public class HuskyLensTest extends LinearOpMode {
     private HuskyLens huskyLens;
 
 
-    private static final double APRILTAG_REAL_WIDTH = 6.0; // 
+    private static final double APRILTAG_REAL_WIDTH = 6.0; 
 
-    private static final double FOCAL_LENGTH_PIXEL_CONSTANT = 600.0; 
+    private static final double FOCAL_LENGTH_PIXEL_CONSTANT = 600.0; //constant needs to be determined (pixel length)?
 
     @Override
     public void runOpMode() {
