@@ -42,7 +42,7 @@ public class HuskyLensTest extends LinearOpMode {
 
                     if (block.width > 0) {
                         double distance = (APRILTAG_REAL_WIDTH * FOCAL_LENGTH_PIXEL_CONSTANT) / block.width;
-                        telemetry.addData("Tag " + i + " Distance (approx)", "%.2f inches", distance);
+                        telemetry.addData("Tag " + i + " Distance (approx)", "%.2f cm", distance);
                     }
                 }
             } else {
