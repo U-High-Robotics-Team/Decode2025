@@ -44,13 +44,13 @@ public class HuskyLensTest extends LinearOpMode { // Creating a public class inf
                         case 1: // Initial case, where ID = 1.
                             detectedPattern = "GPP"; // IDK check if this pattern corresponds to GPP.
                             break; // Ending functionality for mitigation of overrun information.
-                        case 2:
+                        case 2: // Second case, where ID = 2.
                             detectedPattern = "PGP"; // IDK check if this pattern corresponds to PGP.
                             break; // Ending functionality for mitigation of overrun information.
-                        case 3:
+                        case 3: // Third case, where ID = 3.
                             detectedPattern = "PPG"; // IDK check if this pattern corresponds to PPG.
                             break; // Ending functionality for mitigation of overrun information.
-                        default:
+                        default: // External case, where no ID is detected.
                             detectedPattern = "Unknown ID"; // Backup integration of a potential error.
                             break; // Ending functionality for mitigation of overrun information.
                     }
