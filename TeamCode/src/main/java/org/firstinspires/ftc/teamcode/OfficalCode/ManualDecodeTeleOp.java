@@ -26,8 +26,8 @@ import java.util.Arrays;
 // 1 = purple
 // 2 = green
 
-@TeleOp(name="DecodeTeleOp")
-public class DecodeTeleOp extends OpMode {
+@TeleOp(name="ManualDecodeTeleOp")
+public class ManualDecodeTeleOp extends OpMode {
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
 
@@ -162,10 +162,18 @@ public class DecodeTeleOp extends OpMode {
 
     public void gamepadInputs() {
         // Switch Between Robot Modes: Shooting and Intaking
-        if (gamepad1.right_trigger > 0.5) {
-            requestedState = nextStateForIntake();
-        } else if (gamepad1.left_trigger > 0.5) {
-            requestedState = nextStateForShoot();
+        if (gamepad1.right_trigger > 0.5 && gamepad1.a) {
+            requestedState = RobotStates.INTAKE1;
+        } else if (gamepad1.right_trigger > 0.5 && gamepad1.b) {
+            requestedState = RobotStates.INTAKE2;
+        } else if (gamepad1.right_trigger > 0.5 && gamepad1.y) {
+            requestedState = RobotStates.INTAKE3;
+        } else if (gamepad1.left_trigger > 0.5 && gamepad1.a) {
+            requestedState = RobotStates.SHOOT1;
+        } else if (gamepad1.left_trigger > 0.5 && gamepad1.b) {
+            requestedState = RobotStates.SHOOT2;
+        } else if (gamepad1.left_trigger > 0.5 && gamepad1.y) {
+            requestedState = RobotStates.SHOOT3;
         } else if (gamepad1.start) {
             requestedState = RobotStates.HOME;
         }
@@ -204,13 +212,7 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
 
-                if(timer.seconds()>2 && intakeStorage[0] == 0){
-                    intakeStorage[0] = colorSeen();
-
-                    if(intakeStorage[0] != 0){
-                        requestedState = nextStateForIntake();
-                    }
-                }
+                intakeStorage[0] = colorSeen();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -239,13 +241,8 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
 
-                if(timer.seconds()>2 && intakeStorage[1] == 0){
-                    intakeStorage[1] = colorSeen();
 
-                    if(intakeStorage[1] != 0){
-                        requestedState = nextStateForIntake();
-                    }
-                }
+                intakeStorage[1] = colorSeen();
 
 
 
@@ -275,13 +272,8 @@ public class DecodeTeleOp extends OpMode {
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
 
-                if(timer.seconds()>2 && intakeStorage[2] == 0){
-                    intakeStorage[2] = colorSeen();
+                intakeStorage[2] = colorSeen();
 
-                    if(intakeStorage[2] != 0){
-                        requestedState = nextStateForIntake();
-                    }
-                }
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -318,11 +310,6 @@ public class DecodeTeleOp extends OpMode {
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
-                    requestedState = nextStateForShoot();
-                }
-
-
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
                     timer.reset();
@@ -357,11 +344,6 @@ public class DecodeTeleOp extends OpMode {
                 if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
-
-                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
-                    requestedState = nextStateForShoot();
-                }
-
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -398,10 +380,6 @@ public class DecodeTeleOp extends OpMode {
 
                 if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
-                }
-
-                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
-                    requestedState = nextStateForShoot();
                 }
 
 

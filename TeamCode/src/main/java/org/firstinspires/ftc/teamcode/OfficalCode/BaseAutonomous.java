@@ -42,12 +42,13 @@ public class BaseAutonomous extends OpMode {
 
 
     // Revolving Servo Positions
-    final double INTAKE_1 = 0.0;
-    final double INTAKE_2 = 0.45;
-    final double INTAKE_3 = 0.9;
-    final double SHOOT_1 = .65;
-    final double SHOOT_2 = 1;// TODO: adjust
-    final double SHOOT_3 = 0.2;
+    // Revolving Servo Positions
+    final double INTAKE_1 = 0.207;
+    final double INTAKE_2 = 0.27;
+    final double INTAKE_3 = 0.337;
+    final double SHOOT_1 = 0.305;
+    final double SHOOT_2 = 0.37;
+    final double SHOOT_3 = 0.447;
 
     // Lift Servo Positions
     final double UP_LIFT = 0.2; // TODO: adjust
