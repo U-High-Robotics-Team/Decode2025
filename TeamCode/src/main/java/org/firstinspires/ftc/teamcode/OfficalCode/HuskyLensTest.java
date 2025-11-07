@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode; // Installing according package that links entire directory.
+package org.firstinspires.ftc.teamcode.OfficalCode; // Installing according package that links entire directory.
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode; // Installing respective libraries for operations.
 import com.qualcomm.hardware.dfrobot.HuskyLens;
@@ -13,7 +13,7 @@ public class HuskyLensTest extends LinearOpMode { // Creating a public class inf
     private static final double FOCAL_LENGTH_PIXEL_CONSTANT = 600.0; // constant needs to be determined (pixel length)?
 
     @Override // Changing orientation of function to OpMode.
-    public void runOpMode() { // New method is created to entail entirety of functionality.
+     public void runOpMode() { // New method is created to entail entirety of functionality.
         huskyLens = hardwareMap.get(HuskyLens.class, "huskylens"); // Mapping device to I2C Bus 0.
         huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION); // Choosing HuskyLens setting.
         telemetry.addData("Status", "HuskyLens Initialized. Waiting for Start."); // Telemetry status retrieval.
