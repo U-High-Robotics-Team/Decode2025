@@ -54,12 +54,15 @@ public class DecodeTeleOp extends OpMode {
     boolean readyToShoot = false;
     double wheelSpeed = WHEEL_SPEED_MAX;
     double revolverTarget = SHOOT_1;
+    double revolverTargetManual = 0.228; //-----------
     double intakeSpeed = 0.0;
     double shooterSpeed = 0.0;
     double liftTarget = DOWN_LIFT;
     RobotStates currentState = RobotStates.HOME;
     RobotStates requestedState = RobotStates.HOME;
     int[] intakeStorage = new int[3];
+    storageCheckManual = 0; //-----------
+    initialOffsetAccount = 0.077; //-----------
 
     GoBildaPinpointDriver odo;
     private DcMotor BLeft;
@@ -173,7 +176,8 @@ public class DecodeTeleOp extends OpMode {
             requestedState = nextStateForShoot();
         } else if (gamepad1.start) {
             requestedState = RobotStates.HOME;
-        }
+        } else if (gamepad1.A > 0.5) { //-----------
+            requestedState = manualOverride(); //-----------
     }
 
     public void stateMachine() {
@@ -200,9 +204,45 @@ public class DecodeTeleOp extends OpMode {
                 } else if (requestedState == RobotStates.SHOOT3) {
                     currentState = RobotStates.SHOOT3;
                     timer.reset();
-                }
+                } else if (requestedState == RobotStates.manualOverride){ //-----------
+                    currentState = RobotStates.manualOverride; //-----------
+                    timer.reset(); //-----------
 
                 break;
+
+            case manualOverride: //-----------
+                SHOOT_1 +- initialOffsetAccount; //accounting for initial check //-----------
+                revolverTarget = SHOOT_1; //-----------
+                intakeSpeed = 0.0; //-----------
+                shooterSpeed = SHOOTER_SPEED_MAX; //-----------
+                liftTarget = UP_LIFT; //-----------
+                if (storageCheckManual > 3){ //-----------
+                    storageCheckManual = 0 //-----------
+                } //-----------
+                intakeStorage[storageCheckManual] = 0; //-----------
+                storageCheckManual++; //-----------
+                  if (requestedState == RobotStates.HOME) { //-----------
+                    currentState = RobotStates.HOME; //-----------
+                    timer.reset(); //-----------
+                } else if (requestedState == RobotStates.INTAKE2) { //-----------
+                    currentState = RobotStates.INTAKE2; //-----------
+                    timer.reset(); //-----------
+                } else if (requestedState == RobotStates.INTAKE3) { //-----------
+                    currentState = RobotStates.INTAKE3; //-----------
+                    timer.reset(); //-----------
+                } else if (requestedState == RobotStates.SHOOT1) { //-----------
+                    currentState = RobotStates.SHOOT1; //-----------
+                    timer.reset(); //-----------
+                } else if (requestedState == RobotStates.SHOOT2) { //-----------
+                    currentState = RobotStates.SHOOT2; //-----------
+                    timer.reset(); //-----------
+                } else if (requestedState == RobotStates.SHOOT3) { //-----------
+                    currentState = RobotStates.SHOOT3; //-----------
+                    timer.reset(); //-----------
+                } //-----------
+
+                break; //-----------
+
 
             case INTAKE1:
                 revolverTarget = INTAKE_1;
