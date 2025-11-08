@@ -20,11 +20,14 @@ public class CloseAutonomous extends OpMode {
 
     RobotTarget[] targets = {
             //Start robot one top of 2-3 panel border.
-            new RobotTarget(1524, 0, 0, 4, RobotStates.HOME),
-            new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT1),
-            new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT2),
-            new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT3),
-            new RobotTarget(1500, 0, 0, 4,RobotStates.INTAKE1)
+            new RobotTarget(1524, 0, 0, 4, RobotStates.HOME), 
+            new RobotTarget (0, 0, -90, 4, RobotState.HOME), 
+            new RobotTarget (202, 0, -90, 0, RobotState.HOME), 
+            new RobotTarget (202, 0, -90, 0, RobotState.INTAKE1), 
+            new RobotTarget (202, 0, -90, 0, RobotState.HOME), 
+            new RobotTarget (202, 0, -90, 0, RobotState.INTAKE2), 
+            new RobotTarget (202, 0, -90, 0, RobotState.HOME), 
+            new RobotTarget (202, 0, -90, 0, RobotState.INTAKE3), 
     };
 
     // Timer for Servos
