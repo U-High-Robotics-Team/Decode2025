@@ -1,12 +1,7 @@
-package org.firstinspires.ftc.teamcode;
-
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import java.lang.annotation.Target;
+package org.firstinspires.ftc.teamcode.OfficalCode;
 
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
-import com.qualcomm.robotcore.robot.RobotState;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -18,13 +13,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.OfficalCode.DecodeTeleOp.RobotStates;
 import org.firstinspires.ftc.teamcode.OfficalCode.RobotTarget;
+import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 
-@Autonomous(name="BaseAutonomous")
-public class BaseAutonomous extends OpMode {
+@Autonomous(name="CloseAutonomous")
+public class CloseAutonomous extends OpMode {
 
     RobotTarget[] targets = {
-            new RobotTarget(-1405, -1405, Math.PI / 4, 4, RobotStates.HOME),
-
+            new RobotTarget(1750, 0, 0, 4, RobotStates.HOME),
+            new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT1),
+            new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT2),
+            new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT3),
+            new RobotTarget(1500, 0, 0, 4,RobotStates.INTAKE1)
     };
 
     // Timer for Servos
@@ -36,12 +35,9 @@ public class BaseAutonomous extends OpMode {
     // Motor Powers
     final double WHEEL_SPEED_MAX = 1;
     final double INTAKE_SPEED_MAX = -1;
-    final double SHOOTER_SPEED_MAX = -1;
-
+    final double SHOOTER_SPEED_MAX = -0.95;
     NormalizedRGBA colors;
 
-
-    // Revolving Servo Positions
     // Revolving Servo Positions
     final double INTAKE_1 = 0.207;
     final double INTAKE_2 = 0.27;
@@ -51,8 +47,8 @@ public class BaseAutonomous extends OpMode {
     final double SHOOT_3 = 0.447;
 
     // Lift Servo Positions
-    final double UP_LIFT = 0.2; // TODO: adjust
-    final double DOWN_LIFT = 0.0; // TODO: adjust
+    private final double UP_LIFT = 0.89;
+    private final double DOWN_LIFT = 0.85;
 
     //Inital
     boolean readyToShoot = false;
@@ -64,6 +60,7 @@ public class BaseAutonomous extends OpMode {
     RobotStates currentState = RobotStates.HOME;
     RobotStates requestedState = RobotStates.HOME;
     int[] intakeStorage = new int[3];
+
 
     GoBildaPinpointDriver odo;
     private DcMotor BLeft;
@@ -120,7 +117,6 @@ public class BaseAutonomous extends OpMode {
         telemetry.addData("Current X", currentX);
         telemetry.addData("Current Y", currentY);
         telemetry.addData("Current Heading", currentHeading);
-
     }
 
     @Override
@@ -146,6 +142,11 @@ public class BaseAutonomous extends OpMode {
 
         this.colors = colorSensor.getNormalizedColors();
 
+        for(int i = 0; i < 3; i++){
+            intakeStorage[i]=1;
+        }
+
+
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         FLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -156,7 +157,7 @@ public class BaseAutonomous extends OpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
         odo.resetPosAndIMU();
 
-        Pose2D startingPosition = new Pose2D(DistanceUnit.MM, -923.925, 1601.47, AngleUnit.RADIANS, 0);
+        Pose2D startingPosition = new Pose2D(DistanceUnit.MM, 0, 0, AngleUnit.RADIANS, 0);
         odo.setPosition(startingPosition);
 
         telemetry.addData("Status", "Initialized");
@@ -199,7 +200,8 @@ public class BaseAutonomous extends OpMode {
         }
 
         // Inversing y-axis
-        deltaY = -deltaY;
+        // deltaY = deltaY;
+        // deltaX = -deltaX;
 
         double xPower = deltaX * kP;
         double yPower = deltaY * kP;
@@ -214,9 +216,9 @@ public class BaseAutonomous extends OpMode {
         double localY = -xPower * sinAngle + yPower * cosAngle;
 
         // Calculating individual wheel speeds
-        double frontLeft = (localX + localY + turnPower) * wheelSpeed;
+        double frontLeft = (localX - localY + turnPower) * wheelSpeed;
         double frontRight = (localX - localY - turnPower) * wheelSpeed;
-        double backLeft = (localX - localY + turnPower) * wheelSpeed;
+        double backLeft = (localX + localY + turnPower) * wheelSpeed;
         double backRight = (localX + localY - turnPower) * wheelSpeed;
 
         FLeft.setPower(frontLeft);
@@ -241,6 +243,7 @@ public class BaseAutonomous extends OpMode {
         BRight.setPower(0);
     }
 
+
     public void stateMachine() {
         switch (currentState) {
             case HOME:
@@ -248,9 +251,22 @@ public class BaseAutonomous extends OpMode {
                 shooterSpeed = 0.0;
 
                 if (requestedState == RobotStates.INTAKE1) {
-                    currentState = nextStateForIntake();
+                    currentState = RobotStates.INTAKE1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.INTAKE2) {
+                    currentState = RobotStates.INTAKE2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.INTAKE3) {
+                    currentState = RobotStates.INTAKE3;
+                    timer.reset();
                 } else if (requestedState == RobotStates.SHOOT1) {
-                    currentState = nextStateForShoot();
+                    currentState = RobotStates.SHOOT1;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT2) {
+                    currentState = RobotStates.SHOOT2;
+                    timer.reset();
+                } else if (requestedState == RobotStates.SHOOT3) {
+                    currentState = RobotStates.SHOOT3;
                     timer.reset();
                 }
 
@@ -260,18 +276,8 @@ public class BaseAutonomous extends OpMode {
                 revolverTarget = INTAKE_1;
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
-                if(intakeStorage[0] == 0) {
-                    intakeStorage[0] = colorSeen();
-                    timer.reset();
-                }
 
-                if(intakeStorage[0] != 0){
-
-                    if (timer.seconds() > 1){
-                        requestedState = nextStateForIntake();
-                    }
-                }
-
+                intakeStorage[0] = colorSeen();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -299,18 +305,11 @@ public class BaseAutonomous extends OpMode {
                 revolverTarget = INTAKE_2;
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
-                if(intakeStorage[1] == 0) {
-                    timer.reset();
-                    intakeStorage[1] = colorSeen();
-                }
 
 
-                if(intakeStorage[1] != 0){
+                intakeStorage[1] = colorSeen();
 
-                    if (timer.seconds() > 1){
-                        requestedState = nextStateForIntake();
-                    }
-                }
+
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -337,18 +336,9 @@ public class BaseAutonomous extends OpMode {
                 revolverTarget = INTAKE_3;
                 intakeSpeed = INTAKE_SPEED_MAX;
                 shooterSpeed = 0.0;
-                if(intakeStorage[2] == 0) {
-                    timer.reset();
-                    intakeStorage[2] = colorSeen();
-                }
 
+                intakeStorage[2] = colorSeen();
 
-                if(intakeStorage[2] != 0){
-
-                    if (timer.seconds() > 1){
-                        requestedState = nextStateForIntake();
-                    }
-                }
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -376,19 +366,14 @@ public class BaseAutonomous extends OpMode {
                 intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > 1){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[0] = 0;
                 }
 
-                if(timer.seconds()>2){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
-
-                if(intakeStorage[0] == 0){
-                    requestedState = nextStateForShoot();
-                }
-
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -415,21 +400,15 @@ public class BaseAutonomous extends OpMode {
                 revolverTarget = SHOOT_2;
                 intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
-                if(timer.seconds() > 1){
+
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[1] = 0;
                 }
 
-                if(timer.seconds()>2){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
-
-                if(intakeStorage[1] == 0){
-                    requestedState = nextStateForShoot();
-                }
-
-
-                requestedState = nextStateForShoot();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
@@ -459,21 +438,15 @@ public class BaseAutonomous extends OpMode {
                 shooterSpeed = SHOOTER_SPEED_MAX;
                 intakeStorage[2] = 0;
 
-                if(timer.seconds() > 1){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[2] = 0;
                 }
 
-                if(timer.seconds()>2){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[2] == 0){
-                    requestedState = nextStateForShoot();
-                }
-
-
-                requestedState = nextStateForShoot();
 
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
