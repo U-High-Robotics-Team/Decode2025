@@ -17,28 +17,28 @@ import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 
 import java.util.Arrays;
 
-
-// 1 = GPP
-// 2 = PGP
-// 3 = PPG
-
-// 0 = empty
-// 1 = purple
-// 2 = green
-
 @TeleOp(name="ManualDecodeTeleOp")
 public class ManualDecodeTeleOp extends OpMode {
+
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
+    public final double TIME_BTW_REVOLVE_AND_LIFT = 1.5;
+    public final double TIME_BTW_LIFT_AND_DOWN = 3;
+    public final double TIME_BTW_DOWN_AND_REVOLVE = 3.5;
 
-    final double WHEEL_SPEED_MAX = 1;
 
+    // Logic Variables
     public boolean isManual = false;
-
     NormalizedRGBA colors;
 
+    // Speed Max
     final double INTAKE_SPEED_MAX = -1;
     final double SHOOTER_SPEED_MAX = -1;
+    final double WHEEL_SPEED_MAX = 1;
+
+    // Speed Min
+    final double INTAKE_SPEED_MIN = 0;
+    final double SHOOTER_SPEED_MIN = 0;
 
     // Revolving Servo Positions
     final double INTAKE_1 = 0.207;
@@ -53,7 +53,6 @@ public class ManualDecodeTeleOp extends OpMode {
     private final double DOWN_LIFT = 0.85;
 
     // Inital Conditions
-    boolean readyToShoot = false;
     double wheelSpeed = WHEEL_SPEED_MAX;
     double revolverTarget = SHOOT_1;
     double intakeSpeed = 0.0;
@@ -62,6 +61,7 @@ public class ManualDecodeTeleOp extends OpMode {
     RobotStates currentState = RobotStates.HOME;
     RobotStates requestedState = RobotStates.HOME;
     int[] intakeStorage = new int[3];
+    int[] targetStorage = new int[3];
 
     GoBildaPinpointDriver odo;
     private DcMotor BLeft;
@@ -87,7 +87,6 @@ public class ManualDecodeTeleOp extends OpMode {
     @Override
     public void init() {
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
-
         BLeft = hardwareMap.get(DcMotor.class, "backleft");
         BRight = hardwareMap.get(DcMotor.class, "backright");
         FLeft = hardwareMap.get(DcMotor.class, "frontleft");
@@ -101,8 +100,6 @@ public class ManualDecodeTeleOp extends OpMode {
         shooter.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(10, 3, 0, 12)); // tune as needed
 
-        this.colors = colorSensor.getNormalizedColors();
-
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         FLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -114,8 +111,13 @@ public class ManualDecodeTeleOp extends OpMode {
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.FORWARD, GoBildaPinpointDriver.EncoderDirection.FORWARD);
         odo.resetPosAndIMU();
 
+        // inital conditions
+        targetStorage[0] = 1;
+        targetStorage[1] = 1;
+        targetStorage[2] = 2;
         Pose2D startingPosition = new Pose2D(DistanceUnit.MM, -923.925, 1601.47, AngleUnit.RADIANS, 0);
         odo.setPosition(startingPosition);
+        this.colors = colorSensor.getNormalizedColors();
 
         telemetry.addData("Status", "Initialized");
         telemetry.addData("Device Version Number:", odo.getDeviceVersion());
@@ -131,6 +133,10 @@ public class ManualDecodeTeleOp extends OpMode {
         double forward = gamepad1.left_stick_y * wheelSpeed; // (inverted Y-axis)
         double strafe = -gamepad1.left_stick_x * wheelSpeed;
         double rotate = gamepad1.right_stick_x * wheelSpeed;
+
+        if (gamepad1.right_trigger > 0.9) {
+            odo.resetPosAndIMU(); //resets the position to 0 and recalibrates the IMU
+        }
 
         Pose2D pos = odo.getPosition();
         double heading = pos.getHeading(AngleUnit.RADIANS);
@@ -152,12 +158,12 @@ public class ManualDecodeTeleOp extends OpMode {
         FRight.setPower(newWheelSpeeds[1]);
         BLeft.setPower(newWheelSpeeds[2]);
         BRight.setPower(newWheelSpeeds[3]);
+
         telemetry.addData("Robot XPos: ", pos.getX(DistanceUnit.MM));
         telemetry.addData("Robot YPos: ", pos.getY(DistanceUnit.MM));
         telemetry.addData("Robot Heading: ", heading);
         telemetry.addData("Forward Speed : ", globalForward);
         telemetry.addData("Strafe Speed : ", globalStrafe);
-
         telemetry.addData("Forward Speed : ", globalForward);
         telemetry.addData("Strafe Speed : ", globalStrafe);
     }
@@ -171,13 +177,30 @@ public class ManualDecodeTeleOp extends OpMode {
         } else if (gamepad2.right_bumper) {
             requestedState = RobotStates.HOME;
         }
+
+        if (gamepad1.a) {
+            // Set target order green, purple, purple
+            targetStorage[0] = 2;
+            targetStorage[1] = 1;
+            targetStorage[2] = 1;
+        } else if (gamepad1.b) {
+            // Set target order purple, green, purple
+            targetStorage[0] = 1;
+            targetStorage[1] = 2;
+            targetStorage[2] = 1;
+        } else if (gamepad1.y) {
+            // Set target order purple, purple, green
+            targetStorage[0] = 1;
+            targetStorage[1] = 1;
+            targetStorage[2] = 2;
+        }
     }
 
     public void stateMachine() {
         switch (currentState) {
             case HOME:
-                intakeSpeed = 0.0;
-                shooterSpeed = 0.0;
+                intakeSpeed = INTAKE_SPEED_MIN;
+                shooterSpeed = SHOOTER_SPEED_MIN;
 
                 if (requestedState == RobotStates.INTAKE1) {
                     currentState = RobotStates.INTAKE1;
@@ -204,7 +227,7 @@ public class ManualDecodeTeleOp extends OpMode {
             case INTAKE1:
                 revolverTarget = INTAKE_1;
                 intakeSpeed = INTAKE_SPEED_MAX;
-                shooterSpeed = 0.0;
+                shooterSpeed = SHOOTER_SPEED_MIN;
 
                 if(timer.seconds()>2 && intakeStorage[0] == 0){
                     intakeStorage[0] = colorSeen();
@@ -239,7 +262,7 @@ public class ManualDecodeTeleOp extends OpMode {
             case INTAKE2:
                 revolverTarget = INTAKE_2;
                 intakeSpeed = INTAKE_SPEED_MAX;
-                shooterSpeed = 0.0;
+                shooterSpeed = SHOOTER_SPEED_MIN;
 
                 if(timer.seconds()>2 && intakeStorage[1] == 0){
                     intakeStorage[1] = colorSeen();
@@ -275,7 +298,7 @@ public class ManualDecodeTeleOp extends OpMode {
             case INTAKE3:
                 revolverTarget = INTAKE_3;
                 intakeSpeed = INTAKE_SPEED_MAX;
-                shooterSpeed = 0.0;
+                shooterSpeed = SHOOTER_SPEED_MIN;
 
                 if(timer.seconds()>2 && intakeStorage[2] == 0){
                     intakeStorage[2] = colorSeen();
@@ -308,19 +331,19 @@ public class ManualDecodeTeleOp extends OpMode {
                 break;
             case SHOOT1:
                 revolverTarget = SHOOT_1;
-                intakeSpeed = 0.0;
+                intakeSpeed = INTAKE_SPEED_MIN;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > 1.5){
+                if(timer.seconds() > TIME_BTW_REVOLVE_AND_LIFT){
                     liftTarget = UP_LIFT;
                     intakeStorage[0] = 0;
                 }
 
-                if(timer.seconds()>3){
+                if(timer.seconds()>TIME_BTW_LIFT_AND_DOWN){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
+                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>TIME_BTW_DOWN_AND_REVOLVE){
                     requestedState = nextStateForShoot();
                 }
 
@@ -348,19 +371,19 @@ public class ManualDecodeTeleOp extends OpMode {
                 break;
             case SHOOT2:
                 revolverTarget = SHOOT_2;
-                intakeSpeed = 0.0;
+                intakeSpeed = INTAKE_SPEED_MIN;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > 1.5){
+                if(timer.seconds() > TIME_BTW_REVOLVE_AND_LIFT){
                     liftTarget = UP_LIFT;
                     intakeStorage[1] = 0;
                 }
 
-                if(timer.seconds()>3){
+                if(timer.seconds()>TIME_BTW_LIFT_AND_DOWN){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
+                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>TIME_BTW_DOWN_AND_REVOLVE){
                     requestedState = nextStateForShoot();
                 }
 
@@ -389,20 +412,20 @@ public class ManualDecodeTeleOp extends OpMode {
 
             case SHOOT3:
                 revolverTarget = SHOOT_3;
-                intakeSpeed = 0.0;
+                intakeSpeed = INTAKE_SPEED_MIN;
                 shooterSpeed = SHOOTER_SPEED_MAX;
                 intakeStorage[2] = 0;
 
-                if(timer.seconds() > 1.5){
+                if(timer.seconds() > TIME_BTW_REVOLVE_AND_LIFT){
                     liftTarget = UP_LIFT;
                     intakeStorage[2] = 0;
                 }
 
-                if(timer.seconds()>3){
+                if(timer.seconds()>TIME_BTW_LIFT_AND_DOWN){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
+                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>TIME_BTW_DOWN_AND_REVOLVE){
                     requestedState = nextStateForShoot();
                 }
 
@@ -745,26 +768,82 @@ public class ManualDecodeTeleOp extends OpMode {
         }
     }
 
-    public int availableShoot(){
-        for (int i = 0; i < intakeStorage.length; i++) {
-            if(this.intakeStorage[i] != 0){
-                return i;
+//    public int availableShoot(){
+//        for (int i = 0; i < intakeStorage.length; i++) {
+//            if(this.intakeStorage[i] != 0){
+//                return i;
+//            }
+//        }
+//
+//        return -1;
+//    }
+//
+//    public RobotStates nextStateForShoot(){
+//        if(availableShoot() == 0){
+//            return RobotStates.SHOOT1;
+//        }else if(availableShoot() == 1){
+//            return RobotStates.SHOOT2;
+//        }else if(availableShoot() == 2){
+//            return RobotStates.SHOOT3;
+//        }else{
+//            return RobotStates.HOME;
+//        }
+//    }
+
+    public RobotStates nextStateForShoot() {
+        int[] order = getShootOrder();
+
+        // Find the first filled intake index according to that order
+        for (int idx : order) {
+            if (intakeStorage[idx] != 0) {
+                switch (idx) {
+                    case 0: return RobotStates.SHOOT1;
+                    case 1: return RobotStates.SHOOT2;
+                    case 2: return RobotStates.SHOOT3;
+                }
             }
         }
 
-        return -1;
+        return RobotStates.HOME;
     }
 
-    public RobotStates nextStateForShoot(){
-        if(availableShoot() == 0){
-            return RobotStates.SHOOT1;
-        }else if(availableShoot() == 1){
-            return RobotStates.SHOOT2;
-        }else if(availableShoot() == 2){
-            return RobotStates.SHOOT3;
-        }else{
-            return RobotStates.HOME;
+
+    public int[] getShootOrder(){
+        int[] order = new int[3];
+        boolean[] isUsed = new boolean[3];
+
+        for (int i = 0; i < 3; i++) {
+
+            int desiredColor = this.targetStorage[i];
+            int bestMatch = -1;
+
+
+            for (int j = 0; j < 3; j++) {
+                if(!isUsed[j] && this.intakeStorage[j] == desiredColor){
+                    bestMatch = j;
+                    break;
+                }
+            }
+
+            if(bestMatch == -1){
+                for (int j = 0; j < 3; j++) {
+                    if (!isUsed[j] && intakeStorage[j] != 0) {
+                        bestMatch = j;
+                        break;
+                    }
+                }
+            }
+
+            if(bestMatch != -1){
+                order[i] = bestMatch;
+                isUsed[bestMatch] = true;
+            }else{
+                break;
+            }
+
         }
+
+        return order;
     }
 
     @Override
@@ -772,6 +851,8 @@ public class ManualDecodeTeleOp extends OpMode {
         odo.update();
         this.colors = colorSensor.getNormalizedColors();
 
+
+        // handles switching between manual and auto
         if(gamepad2.back) {
             isManual = true;
         }else if(gamepad2.start){
@@ -795,6 +876,7 @@ public class ManualDecodeTeleOp extends OpMode {
         telemetry.addData("Current State", currentState);
         telemetry.addData("Requested State", requestedState);
         telemetry.addData("Ball Storage", Arrays.toString(intakeStorage));
+        telemetry.addData("Target Storage", Arrays.toString(targetStorage));
         telemetry.addData("Color Seen", colorSeen());
         telemetry.addData("Timer (s)", timer.seconds());
         telemetry.addData("Red", colors.red);
