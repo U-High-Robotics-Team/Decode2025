@@ -19,7 +19,8 @@ import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 public class CloseAutonomous extends OpMode {
 
     RobotTarget[] targets = {
-            new RobotTarget(1750, 0, 0, 4, RobotStates.HOME),
+            //Start robot one top of 2-3 panel border.
+            new RobotTarget(1524, 0, 0, 4, RobotStates.HOME),
             new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT1),
             new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT2),
             new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT3),
@@ -60,6 +61,7 @@ public class CloseAutonomous extends OpMode {
     RobotStates currentState = RobotStates.HOME;
     RobotStates requestedState = RobotStates.HOME;
     int[] intakeStorage = new int[3];
+    String[] motif = new String[3];
 
 
     GoBildaPinpointDriver odo;
