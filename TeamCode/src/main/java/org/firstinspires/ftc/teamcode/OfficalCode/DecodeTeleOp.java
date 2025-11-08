@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.OfficalCode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -14,6 +16,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode; // Installing respective libraries for operations.
+import com.qualcomm.hardware.dfrobot.HuskyLens;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 
 import java.util.Arrays;
 
@@ -50,6 +57,11 @@ public class DecodeTeleOp extends OpMode {
     private final double UP_LIFT = 0.89;
     private final double DOWN_LIFT = 0.85;
 
+    //Husky Conditions
+    private HuskyLens huskyLens; // Initializing a private variable that can only be referenced.
+    private static final double APRILTAG_REAL_WIDTH = 6.0; // Standard width of APRIL TAG
+    private static final double FOCAL_LENGTH_PIXEL_CONSTANT = 600.0; // constant needs to be determined (pixel length)?
+
     // Inital Conditions
     boolean readyToShoot = false;
     double wheelSpeed = WHEEL_SPEED_MAX;
@@ -85,6 +97,14 @@ public class DecodeTeleOp extends OpMode {
     @Override
     public void init() {
         odo = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
+        huskyLens = hardwareMap.get(HuskyLens.class, "huskylens");
+        try {
+            huskyLens.selectAlgorithm(HuskyLens.Algorithm.TAG_RECOGNITION);
+        } catch (Exception e) {
+            telemetry.addData("Error:", "HuskyLens not connected or algorithm failed to select.");
+        }
+        telemetry.addData("Status", "HuskyLens Initialized. Waiting for Start.");
+        telemetry.update();
 
         BLeft = hardwareMap.get(DcMotor.class, "backleft");
         BRight = hardwareMap.get(DcMotor.class, "backright");
@@ -98,6 +118,7 @@ public class DecodeTeleOp extends OpMode {
         shooter.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         shooter.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,
                 new PIDFCoefficients(10, 3, 0, 12)); // tune as needed
+
 
         this.colors = colorSensor.getNormalizedColors();
 
@@ -115,10 +136,10 @@ public class DecodeTeleOp extends OpMode {
         Pose2D startingPosition = new Pose2D(DistanceUnit.MM, -923.925, 1601.47, AngleUnit.RADIANS, 0);
         odo.setPosition(startingPosition);
 
-        telemetry.addData("Status", "Initialized");
-        telemetry.addData("Device Version Number:", odo.getDeviceVersion());
-        telemetry.addData("Device Scalar", odo.getYawScalar());
-        telemetry.update();
+        //telemetry.addData("Status", "Initialized");
+        //telemetry.addData("Device Version Number:", odo.getDeviceVersion());
+        //telemetry.addData("Device Scalar", odo.getYawScalar());
+        //telemetry.update();
 
         // Wait for the game to start (driver presses START)
         resetRuntime();
@@ -129,6 +150,10 @@ public class DecodeTeleOp extends OpMode {
         double forward = gamepad1.left_stick_y * wheelSpeed; // (inverted Y-axis)
         double strafe = -gamepad1.left_stick_x * wheelSpeed;
         double rotate = gamepad1.right_stick_x * wheelSpeed;
+
+        // if (gamepad1.right_trigger > 0.9) {
+        //     odo.resetPosAndIMU(); //resets the position to 0 and recalibrates the IMU
+        // }
 
         Pose2D pos = odo.getPosition();
         double heading = pos.getHeading(AngleUnit.RADIANS);
@@ -150,14 +175,14 @@ public class DecodeTeleOp extends OpMode {
         FRight.setPower(newWheelSpeeds[1]);
         BLeft.setPower(newWheelSpeeds[2]);
         BRight.setPower(newWheelSpeeds[3]);
-        telemetry.addData("Robot XPos: ", pos.getX(DistanceUnit.MM));
-        telemetry.addData("Robot YPos: ", pos.getY(DistanceUnit.MM));
-        telemetry.addData("Robot Heading: ", heading);
-        telemetry.addData("Forward Speed : ", globalForward);
-        telemetry.addData("Strafe Speed : ", globalStrafe);
+        //telemetry.addData("Robot XPos: ", pos.getX(DistanceUnit.MM));
+        //telemetry.addData("Robot YPos: ", pos.getY(DistanceUnit.MM));
+        //telemetry.addData("Robot Heading: ", heading);
+        //telemetry.addData("Forward Speed : ", globalForward);
+        //telemetry.addData("Strafe Speed : ", globalStrafe);
 
-        telemetry.addData("Forward Speed : ", globalForward);
-        telemetry.addData("Strafe Speed : ", globalStrafe);
+        //telemetry.addData("Forward Speed : ", globalForward);
+        //telemetry.addData("Strafe Speed : ", globalStrafe);
     }
 
     public void gamepadInputs() {
@@ -448,9 +473,9 @@ public class DecodeTeleOp extends OpMode {
         }else{
             shooter.setVelocity(0);
         }
-        telemetry.addData("Shooter RPM Target", targetRPM);
-        telemetry.addData("Shooter Velocity (t/s)", shooter.getVelocity());
-        telemetry.addData("Shooter RPM Actual", shooter.getVelocity() * 60 / ticksPerRev);
+        //telemetry.addData("Shooter RPM Target", targetRPM);
+        //telemetry.addData("Shooter Velocity (t/s)", shooter.getVelocity());
+        //telemetry.addData("Shooter RPM Actual", shooter.getVelocity() * 60 / ticksPerRev);
     }
 
 
@@ -517,6 +542,50 @@ public class DecodeTeleOp extends OpMode {
         }
     }
 
+
+
+    public void huskyLens() {
+        HuskyLens.Block[] blocks = huskyLens.blocks();
+        String detectedPattern = "None detected";
+
+        if (blocks != null && blocks.length > 0) {
+            telemetry.addData("AprilTags Detected", blocks.length);
+            for (int i = 0; i < blocks.length; i++) {
+                HuskyLens.Block block = blocks[i];
+                telemetry.addData("Tag " + i + " ID", block.id);
+                // ... (rest of the telemetry data) ...
+
+                if (block.width > 0) {
+                    double distance = (APRILTAG_REAL_WIDTH * FOCAL_LENGTH_PIXEL_CONSTANT) / block.width;
+                    telemetry.addData("Tag " + i + " Distance (approx)", "%.2f cm", distance);
+                }
+
+                switch (block.id) {
+                    case 1:
+                        detectedPattern = "GPP";
+                        break;
+                    case 2:
+                        detectedPattern = "PGP";
+                        break;
+                    case 3:
+                        detectedPattern = "PPG";
+                        break;
+                    default:
+                        detectedPattern = "Unknown ID";
+                        break;
+                }
+            }
+        } else {
+            telemetry.addData("AprilTags Detected", "None");
+        }
+
+        telemetry.addData("Obelisk Pattern", detectedPattern);
+        // telemetry.update() is handled by the main loop() method below, remove this specific one
+    }
+
+
+
+
     @Override
     public void loop() {
         odo.update();
@@ -530,15 +599,17 @@ public class DecodeTeleOp extends OpMode {
         moveShooter();
         moveLift();
         moveRobot();
+        huskyLens();
 
-        telemetry.addData("Current State", currentState);
-        telemetry.addData("Requested State", requestedState);
-        telemetry.addData("Ball Storage", Arrays.toString(intakeStorage));
-        telemetry.addData("Color Seen", colorSeen());
-        telemetry.addData("Timer (s)", timer.seconds());
-        telemetry.addData("Red", colors.red);
-        telemetry.addData("Blue", colors.blue);
-        telemetry.addData("Green", colors.green);
+        //telemetry.addData("Current State", currentState);
+        //telemetry.addData("Requested State", requestedState);
+        //telemetry.addData("Ball Storage", Arrays.toString(intakeStorage));
+        //telemetry.addData("Color Seen", colorSeen());
+        //telemetry.addData("Timer (s)", timer.seconds());
+        //telemetry.addData("Red", colors.red);
+        //telemetry.addData("Blue", colors.blue);
+        //telemetry.addData("Green", colors.green);
+
         telemetry.update();
     }
 
