@@ -92,6 +92,7 @@ public class DecodeTeleOp extends OpMode {
         SHOOT1,
         SHOOT2,
         SHOOT3
+        //adding different states, for HL turret (i.e., revolution)
     }
 
     @Override
