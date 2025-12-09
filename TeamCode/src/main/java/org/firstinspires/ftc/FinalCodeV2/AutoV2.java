@@ -24,6 +24,9 @@ public class CloseAutonomous extends OpMode {
             new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT2),
             new RobotTarget(1750, 0, 0, 4, RobotStates.SHOOT3),
             new RobotTarget(1500, 0, 0, 4,RobotStates.INTAKE1)
+        // new RobotTarget addition (_,_,_,_,state)
+        //Should utilize new states.
+        (i.e., RobotTarget());
     };
 
     // Timer for Servos
@@ -49,6 +52,8 @@ public class CloseAutonomous extends OpMode {
     // Lift Servo Positions
     private final double UP_LIFT = 0.89;
     private final double DOWN_LIFT = 0.85;
+
+    //Add HL params here (for obelisk direction).
 
     //Inital
     boolean readyToShoot = false;
@@ -547,6 +552,8 @@ public class CloseAutonomous extends OpMode {
         }
     }
 
+//Create a new HL state + method for obelisk pattern direction.
+    
     public double findPIDPower(double delta){
         double derivative = 0;
         double out = 0;
