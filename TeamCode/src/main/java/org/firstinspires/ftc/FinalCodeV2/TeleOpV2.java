@@ -268,7 +268,7 @@ public class DecodeTeleOp extends OpMode {
                 shooterSpeed = 0.0;
 
                 if(timer.seconds()>2 && intakeStorage[1] == 0){
-                    intakeStorage[1] = colorSeen();
+                    intakeStorage[1] = colorSeen(); //Must be deleted; intake is dependenet on color function.
 
                     if(intakeStorage[1] != 0){
                         requestedState = nextStateForIntake();
@@ -486,7 +486,7 @@ public class DecodeTeleOp extends OpMode {
         lift.setPosition(liftTarget);
     }
 
-    public int colorSeen(){
+    public int colorSeen(){ //Entire method should be deleted.
         this.colors = colorSensor.getNormalizedColors();
 
         if(colors.red < 0.01 & colors.green < 0.01 & colors.blue < 0.01){
