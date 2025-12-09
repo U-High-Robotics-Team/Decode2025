@@ -72,6 +72,7 @@ public class DecodeTeleOp extends OpMode {
     RobotStates currentState = RobotStates.HOME;
     RobotStates requestedState = RobotStates.HOME;
     int[] intakeStorage = new int[3];
+    
 
     GoBildaPinpointDriver odo;
     private DcMotor BLeft;
@@ -93,6 +94,7 @@ public class DecodeTeleOp extends OpMode {
         SHOOT2,
         SHOOT3
         //adding different states, for HL turret (i.e., revolution)
+        //Revolution1
     }
 
     @Override
@@ -121,7 +123,7 @@ public class DecodeTeleOp extends OpMode {
                 new PIDFCoefficients(10, 3, 0, 12)); // tune as needed
 
 
-        this.colors = colorSensor.getNormalizedColors();
+        this.colors = colorSensor.getNormalizedColors(); // Should be deleted.
 
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -231,7 +233,7 @@ public class DecodeTeleOp extends OpMode {
                 shooterSpeed = 0.0;
 
                 if(timer.seconds()>2 && intakeStorage[0] == 0){
-                    intakeStorage[0] = colorSeen();
+                    intakeStorage[0] = colorSeen(); //Should be deleted.
 
                     if(intakeStorage[0] != 0){
                         requestedState = nextStateForIntake();
@@ -605,11 +607,11 @@ public class DecodeTeleOp extends OpMode {
         //telemetry.addData("Current State", currentState);
         //telemetry.addData("Requested State", requestedState);
         //telemetry.addData("Ball Storage", Arrays.toString(intakeStorage));
-        //telemetry.addData("Color Seen", colorSeen());
+        //telemetry.addData("Color Seen", colorSeen()); //Should be deleted.
         //telemetry.addData("Timer (s)", timer.seconds());
-        //telemetry.addData("Red", colors.red);
-        //telemetry.addData("Blue", colors.blue);
-        //telemetry.addData("Green", colors.green);
+        //telemetry.addData("Red", colors.red); //Should be deleted.
+        //telemetry.addData("Blue", colors.blue); //Should be deleted.
+        //telemetry.addData("Green", colors.green //Should be deleted.
 
         telemetry.update();
     }
