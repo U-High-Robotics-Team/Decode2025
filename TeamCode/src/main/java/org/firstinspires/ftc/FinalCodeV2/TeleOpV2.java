@@ -57,7 +57,7 @@ public class DecodeTeleOp extends OpMode {
     private final double UP_LIFT = 0.89;
     private final double DOWN_LIFT = 0.85;
 
-    //Husky Conditions
+    //Husky params
     private HuskyLens huskyLens; // Initializing a private variable that can only be referenced.
     private static final double APRILTAG_REAL_WIDTH = 6.0; // Standard width of APRIL TAG
     private static final double FOCAL_LENGTH_PIXEL_CONSTANT = 600.0; // constant needs to be determined (pixel length)?
