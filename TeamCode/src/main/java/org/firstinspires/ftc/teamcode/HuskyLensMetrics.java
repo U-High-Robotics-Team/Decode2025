@@ -27,7 +27,7 @@ public class HuskyLensMetrics extends LinearOpMode { // Creating a class extensi
 
     telemetry.addData("Samples Analyzed:", blocks.length); // Checking if the camera is actually scanning and referencing samples to objects.x1
 
-  } // Ending runOpMode() method in the algorithm.
+  } // Ending runOpMode() method in the algorithm. 
   
 } // Ending initial class of the entire program.
 
