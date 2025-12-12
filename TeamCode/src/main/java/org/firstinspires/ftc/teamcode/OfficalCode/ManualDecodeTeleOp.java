@@ -17,8 +17,8 @@ import org.firstinspires.ftc.teamcode.GoBildaPinpointDriver;
 
 import java.util.Arrays;
 
-@TeleOp(name="ManualDecodeTeleOp")
-public class ManualDecodeTeleOp extends OpMode {
+@TeleOp(name="FinalDecodeTeleOp")
+public class FinalDecodeTeleOp extends OpMode {
 
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
@@ -35,6 +35,7 @@ public class ManualDecodeTeleOp extends OpMode {
     final double INTAKE_SPEED_MAX = -1;
     final double SHOOTER_SPEED_MAX = -1;
     final double WHEEL_SPEED_MAX = 1;
+    int[] order;
 
     // Speed Min
     final double INTAKE_SPEED_MIN = 0;
@@ -62,6 +63,8 @@ public class ManualDecodeTeleOp extends OpMode {
     RobotStates requestedState = RobotStates.HOME;
     int[] intakeStorage = new int[3];
     int[] targetStorage = new int[3];
+
+    int desiredTarget;
 
     GoBildaPinpointDriver odo;
     private DcMotor BLeft;
@@ -112,9 +115,15 @@ public class ManualDecodeTeleOp extends OpMode {
         odo.resetPosAndIMU();
 
         // inital conditions
-        targetStorage[0] = 1;
+        targetStorage[0] = 2;
         targetStorage[1] = 1;
-        targetStorage[2] = 2;
+        targetStorage[2] = 1;
+
+        // TODO:remove
+        intakeStorage[0] = 1;
+        intakeStorage[1] = 1;
+        intakeStorage[2] = 2;
+
         Pose2D startingPosition = new Pose2D(DistanceUnit.MM, -923.925, 1601.47, AngleUnit.RADIANS, 0);
         odo.setPosition(startingPosition);
         this.colors = colorSensor.getNormalizedColors();
@@ -199,8 +208,8 @@ public class ManualDecodeTeleOp extends OpMode {
     public void stateMachine() {
         switch (currentState) {
             case HOME:
-                intakeSpeed = INTAKE_SPEED_MIN;
-                shooterSpeed = SHOOTER_SPEED_MIN;
+                intakeSpeed = 0.0;
+                shooterSpeed = 0.0;
 
                 if (requestedState == RobotStates.INTAKE1) {
                     currentState = RobotStates.INTAKE1;
@@ -227,7 +236,7 @@ public class ManualDecodeTeleOp extends OpMode {
             case INTAKE1:
                 revolverTarget = INTAKE_1;
                 intakeSpeed = INTAKE_SPEED_MAX;
-                shooterSpeed = SHOOTER_SPEED_MIN;
+                shooterSpeed = 0.0;
 
                 if(timer.seconds()>2 && intakeStorage[0] == 0){
                     intakeStorage[0] = colorSeen();
@@ -262,7 +271,7 @@ public class ManualDecodeTeleOp extends OpMode {
             case INTAKE2:
                 revolverTarget = INTAKE_2;
                 intakeSpeed = INTAKE_SPEED_MAX;
-                shooterSpeed = SHOOTER_SPEED_MIN;
+                shooterSpeed = 0.0;
 
                 if(timer.seconds()>2 && intakeStorage[1] == 0){
                     intakeStorage[1] = colorSeen();
@@ -298,7 +307,7 @@ public class ManualDecodeTeleOp extends OpMode {
             case INTAKE3:
                 revolverTarget = INTAKE_3;
                 intakeSpeed = INTAKE_SPEED_MAX;
-                shooterSpeed = SHOOTER_SPEED_MIN;
+                shooterSpeed = 0.0;
 
                 if(timer.seconds()>2 && intakeStorage[2] == 0){
                     intakeStorage[2] = colorSeen();
@@ -331,19 +340,19 @@ public class ManualDecodeTeleOp extends OpMode {
                 break;
             case SHOOT1:
                 revolverTarget = SHOOT_1;
-                intakeSpeed = INTAKE_SPEED_MIN;
+                intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > TIME_BTW_REVOLVE_AND_LIFT){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[0] = 0;
                 }
 
-                if(timer.seconds()>TIME_BTW_LIFT_AND_DOWN){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>TIME_BTW_DOWN_AND_REVOLVE){
+                if(intakeStorage[0] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
                     requestedState = nextStateForShoot();
                 }
 
@@ -371,19 +380,19 @@ public class ManualDecodeTeleOp extends OpMode {
                 break;
             case SHOOT2:
                 revolverTarget = SHOOT_2;
-                intakeSpeed = INTAKE_SPEED_MIN;
+                intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
-                if(timer.seconds() > TIME_BTW_REVOLVE_AND_LIFT){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[1] = 0;
                 }
 
-                if(timer.seconds()>TIME_BTW_LIFT_AND_DOWN){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>TIME_BTW_DOWN_AND_REVOLVE){
+                if(intakeStorage[1] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
                     requestedState = nextStateForShoot();
                 }
 
@@ -412,20 +421,20 @@ public class ManualDecodeTeleOp extends OpMode {
 
             case SHOOT3:
                 revolverTarget = SHOOT_3;
-                intakeSpeed = INTAKE_SPEED_MIN;
+                intakeSpeed = 0.0;
                 shooterSpeed = SHOOTER_SPEED_MAX;
                 intakeStorage[2] = 0;
 
-                if(timer.seconds() > TIME_BTW_REVOLVE_AND_LIFT){
+                if(timer.seconds() > 1.5){
                     liftTarget = UP_LIFT;
                     intakeStorage[2] = 0;
                 }
 
-                if(timer.seconds()>TIME_BTW_LIFT_AND_DOWN){
+                if(timer.seconds()>3){
                     liftTarget = DOWN_LIFT;
                 }
 
-                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>TIME_BTW_DOWN_AND_REVOLVE){
+                if(intakeStorage[2] == 0 && liftTarget == DOWN_LIFT && timer.seconds()>3.5){
                     requestedState = nextStateForShoot();
                 }
 
@@ -791,10 +800,10 @@ public class ManualDecodeTeleOp extends OpMode {
 //    }
 
     public RobotStates nextStateForShoot() {
-        int[] order = getShootOrder();
+        this.order = getShootOrder();
 
         // Find the first filled intake index according to that order
-        for (int idx : order) {
+        for (int idx : this.order) {
             if (intakeStorage[idx] != 0) {
                 switch (idx) {
                     case 0: return RobotStates.SHOOT1;
@@ -808,43 +817,50 @@ public class ManualDecodeTeleOp extends OpMode {
     }
 
 
-    public int[] getShootOrder(){
-        int[] order = new int[3];
-        boolean[] isUsed = new boolean[3];
+    public int[] getShootOrder() {
+        // returns index order (0–2) that should be shot next based on target priorities
+        this.order = new int[3];
+        boolean[] used = new boolean[3];
 
         for (int i = 0; i < 3; i++) {
+            this.desiredTarget = targetStorage[i];
+            int bestMatchIndex = -1;
 
-            int desiredColor = this.targetStorage[i];
-            int bestMatch = -1;
-
-
+            // find first intake slot matching that color that hasn't been used
             for (int j = 0; j < 3; j++) {
-                if(!isUsed[j] && this.intakeStorage[j] == desiredColor){
-                    bestMatch = j;
+                if (!used[j] && intakeStorage[j] == desiredTarget) {
+                    bestMatchIndex = j;
                     break;
                 }
             }
 
-            if(bestMatch == -1){
+//            // if no exact match, just fill with the next available non-empty slot
+//            if (bestMatchIndex == -1) {
+//                for (int j = 0; j < 3; j++) {
+//                    if (!used[j] && intakeStorage[j] != 0) {
+//                        bestMatchIndex = j;
+//                        break;
+//                    }
+//                }
+//            }
+
+            // if still none found, fill with the first unused index
+            if (bestMatchIndex == -1) {
                 for (int j = 0; j < 3; j++) {
-                    if (!isUsed[j] && intakeStorage[j] != 0) {
-                        bestMatch = j;
+                    if (!used[j]) {
+                        bestMatchIndex = j;
                         break;
                     }
                 }
             }
 
-            if(bestMatch != -1){
-                order[i] = bestMatch;
-                isUsed[bestMatch] = true;
-            }else{
-                break;
-            }
-
+            order[i] = bestMatchIndex;
+            used[bestMatchIndex] = true;
         }
 
         return order;
     }
+
 
     @Override
     public void loop() {
@@ -877,11 +893,13 @@ public class ManualDecodeTeleOp extends OpMode {
         telemetry.addData("Requested State", requestedState);
         telemetry.addData("Ball Storage", Arrays.toString(intakeStorage));
         telemetry.addData("Target Storage", Arrays.toString(targetStorage));
+        telemetry.addData("Order Target", Arrays.toString(order));
         telemetry.addData("Color Seen", colorSeen());
         telemetry.addData("Timer (s)", timer.seconds());
         telemetry.addData("Red", colors.red);
         telemetry.addData("Blue", colors.blue);
         telemetry.addData("Green", colors.green);
+        telemetry.addData("Desired Color", desiredTarget);
         telemetry.update();
     }
 
