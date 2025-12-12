@@ -37,6 +37,9 @@ public class Mk2DecodeTeleOp extends OpMode {
     final double CONTROL_SHOOT_SPEED_MAX = -1;
     final double SHOOTER_SPEED_MAX = -1;
 
+    //Shooter Threshold
+    final double SHOOTER_VELO_THRESHOLD = 67;
+
     //Husky Conditions
     // Initializing a private variable that can only be referenced.
     private static final double APRILTAG_REAL_WIDTH = 6.0; // Standard width of APRIL TAG
@@ -58,7 +61,7 @@ public class Mk2DecodeTeleOp extends OpMode {
     private DcMotor FRight;
     private DcMotor intake;
     private DcMotor control;
-    private DcMotor shooter;
+    private DcMotorEx shooter;
 
     public enum RobotStates {
         HOME,
@@ -84,7 +87,7 @@ public class Mk2DecodeTeleOp extends OpMode {
         FRight = hardwareMap.get(DcMotor.class, "frontright");
         intake = hardwareMap.get(DcMotor.class, "intake");
         control = hardwareMap.get(DcMotor.class, "control");
-        shooter = hardwareMap.get(DcMotor.class, "shooter");
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
 
         // reverse the motor directions
         BLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -193,6 +196,12 @@ public class Mk2DecodeTeleOp extends OpMode {
                 controlSpeed = CONTROL_SHOOT_SPEED_MAX;
                 shooterSpeed = SHOOTER_SPEED_MAX;
 
+//                if(shooter.getVelocity() > SHOOTER_VELO_THRESHOLD){
+//                    controlSpeed = CONTROL_SHOOT_SPEED_MAX;
+//                }else if(shooter.getVelocity() < SHOOTER_VELO_THRESHOLD){
+//                    controlSpeed = CONTROL_INTAKE_SPEED_MAX;
+//                }
+
                 if (requestedState == RobotStates.HOME) {
                     currentState = RobotStates.HOME;
                     timer.reset();
@@ -216,46 +225,6 @@ public class Mk2DecodeTeleOp extends OpMode {
     public void moveShooter() {
         shooter.setPower(shooterSpeed);
     }
-//
-//    public void huskyLens() {
-//        HuskyLens.Block[] blocks = huskyLens.blocks();
-//        String detectedPattern = "None detected";
-//
-//        if (blocks != null && blocks.length > 0) {
-//            telemetry.addData("AprilTags Detected", blocks.length);
-//            for (int i = 0; i < blocks.length; i++) {
-//                HuskyLens.Block block = blocks[i];
-//                telemetry.addData("Tag " + i + " ID", block.id);
-//
-//                if (block.width > 0) {
-//                    double distance = (APRILTAG_REAL_WIDTH * FOCAL_LENGTH_PIXEL_CONSTANT) / block.width;
-//                    telemetry.addData("Tag " + i + " Distance (approx)", "%.2f cm", distance);
-//                }
-//
-//                switch (block.id) {
-//                    case 1:
-//                        detectedPattern = "GPP";
-//                        break;
-//                    case 2:
-//                        detectedPattern = "PGP";
-//                        break;
-//                    case 3:
-//                        detectedPattern = "PPG";
-//                        break;
-//                    default:
-//                        detectedPattern = "Unknown ID";
-//                        break;
-//                }
-//            }
-//        } else {
-//            telemetry.addData("AprilTags Detected", "None");
-//        }
-//
-//        telemetry.addData("Obelisk Pattern", detectedPattern);
-//    }
-
-
-
 
     @Override
     public void loop() {
@@ -266,9 +235,9 @@ public class Mk2DecodeTeleOp extends OpMode {
         moveIntake();
         moveControl();
 //        moveRobot();
-//        huskyLens();
         moveShooter();
 
+        telemetry.addData("Shooter Velocity", shooter.getVelocity());
         telemetry.update();
     }
 }
