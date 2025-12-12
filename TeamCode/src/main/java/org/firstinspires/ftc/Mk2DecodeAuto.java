@@ -17,8 +17,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
-@TeleOp(name="Mk2DecodeTeleOp")
-public class Mk2DecodeTeleOp extends OpMode {
+@TeleOp(name="Mk2DecodeAuto")
+public class Mk2DecodeAuto extends OpMode {
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
 
