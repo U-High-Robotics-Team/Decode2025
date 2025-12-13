@@ -1,14 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.robot.RobotState;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.hardware.dfrobot.HuskyLens;
-import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -19,19 +16,28 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 @TeleOp(name="Mk2DecodeAuto")
 public class Mk2DecodeAuto extends OpMode {
+
+    RobotTargetV2[] targets = {
+            new RobotTargetV2(-1255.1184, -55.5543, 0, 3, RobotStates.INTAKE),
+            new RobotTargetV2(-1255.1184, -55.5543, 0, 6, RobotStates.SHOOT),
+            // new RobotTargetV2(-1255.1184, -55.5543, 0.8, 3, RobotStates.HOME),
+            // new RobotTargetV2(-706.1719, 768.77, 0.8, 3, RobotStates.INTAKE),
+            // new RobotTarget(0, 0, 0, 3, RobotState.HOME) // Example of adding multiple targets
+    };
+
     // Timer for Servos
     private final ElapsedTime timer = new ElapsedTime();
 
     // Max Speeds
     final double WHEEL_SPEED_MAX = 1;
-    final double INTAKE_INTAKE_SPEED_MAX = -0.5;
-    final double INTAKE_SHOOT_SPEED_MAX = -0.3;
+    final double INTAKE_INTAKE_SPEED_MAX = -0.8;
+    final double INTAKE_SHOOT_SPEED_MAX = -0.5;
     final double CONTROL_INTAKE_SPEED_MAX = 0.5;
     final double CONTROL_SHOOT_SPEED_MAX = -0.3;
-    final double SHOOTER_VELOCITY_MAX = -1700;
+    final double SHOOTER_VELOCITY_MAX = -1650;
 
     //Shooter Threshold
-    final double SHOOTER_VELO_THRESHOLD = -1700;
+    final double SHOOTER_VELO_THRESHOLD = -1650;
 
     // Inital Conditions
     double wheelSpeed = WHEEL_SPEED_MAX;
@@ -49,6 +55,20 @@ public class Mk2DecodeAuto extends OpMode {
     private DcMotor intake;
     private DcMotor control;
     private DcMotorEx shooter;
+
+    double addX = 0;
+    double addY = 0;
+    double addTheta = 0;
+
+    double kP = 0.0022; // bigger the error the faster we will fix it
+    double kI = 0.00013; // provides extra boost when you get close to the target
+    double kD = 0.00015; // dampens overshoot
+
+    private double integralSum = 0;
+    double lastError = 0;
+    double targetDuration = 0;
+
+    private int currentTargetIndex = 0; // Keeps track of the current target
 
     public enum RobotStates {
         HOME,
@@ -75,7 +95,7 @@ public class Mk2DecodeAuto extends OpMode {
 
         // PIDF for velocity control
         PIDFCoefficients shooterPIDF = new PIDFCoefficients(
-                175,   // P
+                200,   // P
                 5,    // I
                 1,    // D
                 0    // F
@@ -99,58 +119,90 @@ public class Mk2DecodeAuto extends OpMode {
         resetRuntime();
     }
 
+    public void moveRobotTo(double targetX, double targetY, double targetHeading) {
+        odo.update();
 
-    public void moveRobot(){
+        // Getting current positions
+        Pose2D currentPosition = odo.getPosition();
+        double currentX = currentPosition.getX(DistanceUnit.MM);
+        double currentY = currentPosition.getY(DistanceUnit.MM);
+        double currentHeading = currentPosition.getHeading(AngleUnit.RADIANS);
+
         wheelSpeed = WHEEL_SPEED_MAX;
 
-        double forward = -gamepad1.left_stick_y * wheelSpeed; // (inverted Y-axis)
-        double strafe = gamepad1.left_stick_x * wheelSpeed;
-        double rotate = gamepad1.right_stick_x * wheelSpeed;
+        // Finding errors using current and targets
+        double deltaX = targetX - currentX;
+        double deltaY = targetY - currentY;
+        double deltaHeading = targetHeading - currentHeading;
 
-
-
-        Pose2D pos = odo.getPosition();
-        double heading =  pos.getHeading(AngleUnit.RADIANS);
-
-        double cosAngle = Math.cos((Math.PI / 2)-heading);
-        double sinAngle = Math.sin((Math.PI / 2)-heading);
-
-        double globalForward = forward * cosAngle + strafe * sinAngle;
-        double globalStrafe = -forward * sinAngle + strafe * cosAngle;
-
-        double[] newWheelSpeeds = new double[4];
-
-        newWheelSpeeds[0] = globalForward + globalStrafe + rotate;
-        newWheelSpeeds[1] = globalForward - globalStrafe - rotate;
-        newWheelSpeeds[2] = globalForward - globalStrafe + rotate;
-        newWheelSpeeds[3] = globalForward + globalStrafe - rotate;
-
-        FLeft.setPower(newWheelSpeeds[0]);
-        FRight.setPower(newWheelSpeeds[1]);
-        BLeft.setPower(newWheelSpeeds[2]);
-        BRight.setPower(newWheelSpeeds[3]);
-        telemetry.addData("Robot XPos: ", pos.getX(DistanceUnit.MM));
-        telemetry.addData("Robot YPos: ", pos.getY(DistanceUnit.MM));
-        telemetry.addData("Robot Heading: ", heading);
-        telemetry.addData("Forward Speed : ", globalForward);
-        telemetry.addData("Strafe Speed : ", globalStrafe);
-
-        telemetry.addData("Forward Speed : ", globalForward);
-        telemetry.addData("Strafe Speed : ", globalStrafe);
-    }
-
-    public void gamepadInputs() {
-        // Switch Between Robot Modes: Shooting and Intaking
-        if (gamepad1.right_trigger > 0.5) {
-            requestedState = RobotStates.SHOOT;
-        } else if (gamepad1.left_trigger > 0.5) {
-            requestedState = RobotStates.INTAKE;
-        } else if (gamepad1.start) {
-            requestedState = RobotStates.HOME;
-        } else if (gamepad1.back){
-            odo.resetPosAndIMU();
+        // Accounting for minor errors
+        if (Math.abs(deltaY) < 0.5) {
+            deltaY = 0;
         }
+        if (Math.abs(deltaX) < 0.5) {
+            deltaX = 0;
+        }
+        if (Math.abs(deltaHeading) < 0.001) {
+            deltaHeading = 0;
+        }
+
+        // Inversing y-axis
+        // deltaY = -deltaY;
+
+        // Using proportional controller for power
+        // double xPower = Math.max(Math.min(findPIDPower(deltaX), 1), -1);
+        // double yPower = Math.max(Math.min(findPIDPower(deltaY), 1), -1);
+
+
+        double xPower = deltaX * kP;
+        double yPower = deltaY * kP;
+        double turnPower = -deltaHeading;
+
+        //double turnPower = -Math.max(Math.min(findPower(deltaHeading), 1), -1);
+
+
+        // double xPower = deltaX * kP;
+        // double yPower = deltaY * kP;
+        // double turnPower = -Math.toDegrees(deltaHeading) * 0.09;
+
+
+
+        // Negative currentHeading due to rotating global power counterclockwise
+        double cosAngle = Math.cos(-currentHeading);
+        double sinAngle = Math.sin(-currentHeading);
+
+        // Using inverse rotational matrix
+        double localX = xPower * cosAngle + yPower * sinAngle;
+        double localY = -xPower * sinAngle + yPower * cosAngle;
+
+        // Calculating individual wheel speeds
+        double frontLeft = (localX + localY + turnPower) * wheelSpeed;
+        double frontRight = (localX - localY - turnPower) * wheelSpeed;
+        double backLeft = (localX - localY + turnPower) * wheelSpeed;
+        double backRight = (localX + localY - turnPower) * wheelSpeed;
+
+        FLeft.setPower(frontLeft);
+        FRight.setPower(frontRight);
+        BLeft.setPower(backLeft);
+        BRight.setPower(backRight);
+
+        telemetry.addData("Turn Power: ", turnPower);
+        telemetry.addData("CurrentX: ", currentX);
+        telemetry.addData("CurrentY: ", currentY);
+        telemetry.addData("Current Heading: ", currentHeading);
+        telemetry.addData("DeltaX", deltaX);
+        telemetry.addData("DeltaY", deltaY);
+        telemetry.addData("DeltaHeading", deltaHeading);
+        telemetry.update();
     }
+
+    public void stopMotors() {
+        FLeft.setPower(0);
+        FRight.setPower(0);
+        BLeft.setPower(0);
+        BRight.setPower(0);
+    }
+
 
     public void stateMachine() {
         switch (currentState) {
@@ -192,7 +244,7 @@ public class Mk2DecodeAuto extends OpMode {
 
                 if(shooter.getVelocity() < SHOOTER_VELO_THRESHOLD){
                     controlSpeed = CONTROL_SHOOT_SPEED_MAX;
-                }else if(shooter.getVelocity() > SHOOTER_VELO_THRESHOLD){
+                }else if(shooter.getVelocity() > SHOOTER_VELO_THRESHOLD+20){
                     controlSpeed = CONTROL_INTAKE_SPEED_MAX;
                 }
 
@@ -220,18 +272,62 @@ public class Mk2DecodeAuto extends OpMode {
         shooter.setVelocity(shooterVelocity);
     }
 
+
+    public double findPIDPower(double delta){
+        double derivative = 0;
+        double out = 0;
+        double error = 0;
+
+        error = delta;
+
+        // rate of change of the error
+        derivative = (delta - lastError) / timer.seconds();
+
+        // sum of all error over time
+        out = (kP * delta) + (kD * derivative);
+
+        this.lastError = delta;
+
+        return out;
+    }
+
     @Override
     public void loop() {
+        if (currentTargetIndex < targets.length) {
+            RobotTargetV2 target = targets[currentTargetIndex];
+            this.targetDuration = target.time;
+            requestedState = target.state;
+
+            if (timer.seconds() < targetDuration) {
+                moveRobotTo(target.x, target.y, target.heading);
+                stateMachine();
+                moveControl();
+                moveIntake();
+                moveShooter();
+            } else {
+                currentTargetIndex++;
+                timer.reset();
+            }
+        } else {
+            stopMotors(); // Stop the robot once all targets are processed
+        }
+
+        // updating odo positions
         odo.update();
 
-        gamepadInputs();
-        stateMachine();
-        moveIntake();
-        moveControl();
-        moveRobot();
-        moveShooter();
+        // getting current positions
+        Pose2D currentPosition = odo.getPosition();
+        double currentX = currentPosition.getX(DistanceUnit.MM);
+        double currentY = currentPosition.getY(DistanceUnit.MM);
+        double currentHeading = currentPosition.getHeading(AngleUnit.RADIANS);
 
+        telemetry.addData("Current X", currentX);
+        telemetry.addData("Current Y", currentY);
+        telemetry.addData("Current Heading", currentHeading);
         telemetry.addData("Shooter Velocity", shooter.getVelocity());
         telemetry.update();
+
     }
+
+
 }

@@ -25,13 +25,13 @@ public class Mk2DecodeTeleOp extends OpMode {
     // Max Speeds
     final double WHEEL_SPEED_MAX = 1;
     final double INTAKE_INTAKE_SPEED_MAX = -0.5;
-    final double INTAKE_SHOOT_SPEED_MAX = -0.3;
+    final double INTAKE_SHOOT_SPEED_MAX = -0.5;
     final double CONTROL_INTAKE_SPEED_MAX = 0.5;
     final double CONTROL_SHOOT_SPEED_MAX = -0.3;
-    final double SHOOTER_VELOCITY_MAX = -1700;
+    final double SHOOTER_VELOCITY_MAX = -1650;
 
     //Shooter Threshold
-    final double SHOOTER_VELO_THRESHOLD = -1700;
+    final double SHOOTER_VELO_THRESHOLD = -1650;
 
     // Inital Conditions
     double wheelSpeed = WHEEL_SPEED_MAX;
@@ -192,7 +192,7 @@ public class Mk2DecodeTeleOp extends OpMode {
 
                 if(shooter.getVelocity() < SHOOTER_VELO_THRESHOLD){
                     controlSpeed = CONTROL_SHOOT_SPEED_MAX;
-                }else if(shooter.getVelocity() > SHOOTER_VELO_THRESHOLD){
+                }else if(shooter.getVelocity() > SHOOTER_VELO_THRESHOLD+20){
                     controlSpeed = CONTROL_INTAKE_SPEED_MAX;
                 }
 
