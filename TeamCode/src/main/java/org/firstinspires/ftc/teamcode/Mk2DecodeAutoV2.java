@@ -19,14 +19,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 public class Mk2DecodeAutoV2 extends OpMode {
 
     RobotTargetV2[] targets = {
-            new RobotTargetV2(0, 0, 3.14, 100, RobotStates.HOME),
+            new RobotTargetV2(0, 0, 0, 100, RobotStates.HOME),
+
+            // Move Back, Shoot, Intake First Row:
             // new RobotTargetV2(6.365, -764.3257, -2.3661, 100, RobotStates.HOME),
             // new RobotTargetV2(6.365, -764.3257, -2.3661, 6, RobotStates.SHOOT),
-            // new RobotTargetV2(111.275, -870.6038, -1.587, 2, RobotStates.INTAKE),
-            // new RobotTargetV2(-522.65, -75.82, 0, 6, RobotStates.HOME),
-            // new RobotTargetV2(-1255.1184, -55.5543, 0.8, 3, RobotStates.HOME),
-            // new RobotTargetV2(-706.1719, 768.77, 0.8, 3, RobotStates.INTAKE),
-            // new RobotTarget(0, 0, 0, 3, RobotState.HOME) // Example of adding multiple targets
+            // new RobotTargetV2(111.275, -870.6038, -1.587, 2, RobotStates.INTAKE);
     };
 
     // Timer for Servos
@@ -336,8 +334,5 @@ public class Mk2DecodeAutoV2 extends OpMode {
         telemetry.addData("DeltaHeading", deltaHeading);
         telemetry.addData("Shooter Velocity", shooter.getVelocity());
         telemetry.update();
-
     }
-
-
 }
